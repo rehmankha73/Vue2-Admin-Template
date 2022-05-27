@@ -42,14 +42,14 @@ const router = new VueRouter({
 });
 
 // eslint-disable-next-line no-unused-vars
-router.beforeEach((to, __, next) => {
-    if (!localStorage.getItem('auth_token')) {
-        if (to.path !== '/auth/sign-in') {
-            next('/auth/sign-in');
-        }
-    }
-
-    next();
-});
+// router.beforeEach((to, __, next) => {
+//     if (!localStorage.getItem('auth_token')) {
+//         if (to.path !== '/auth/sign-in') {
+//             next('/auth/sign-in');
+//         }
+//     }
+//
+//     next();
+// });
 
 export default router;

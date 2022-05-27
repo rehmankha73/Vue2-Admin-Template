@@ -1,21 +1,24 @@
 <template>
+<!--  :allow-add="getUser() ? getUser().scopes.includes('users:new') : false"-->
+<!--  :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  service.delete : null : null"-->
+<!--  :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"-->
   <data-table
     :loader="loadData"
     :headers="headers"
     title="Users"
-    :allow-add="getUser() ? getUser().scopes.includes('users:new') : false"
     @add-new="addNew"
     @done="$router.back()"
-    :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  service.delete : null : null"
-    :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"
+    :allow-add="true"
+    :delete-handler="deleteService"
+    :edit-handler="edit"
   >
     <template #createdAt="{ item }">
       {{ formatDate(item.createdAt) }}
     </template>
 
-    <template #scopes="{ item }">
-      {{ item.scopes.join(', ').substr(0, 80) + '...' }}
-    </template>
+<!--    <template #scopes="{ item }">-->
+<!--      {{ item.scopes.join(', ').substr(0, 80) + '...' }}-->
+<!--    </template>-->
   </data-table>
 </template>
 
@@ -24,7 +27,6 @@ import dayjs from 'dayjs';
 import { UsersService } from '@/services/users-service';
 import DataTable from '../../components/DataTable';
 import {getUser} from '@/utils/local';
-
 
 export default {
   components: { DataTable },
@@ -38,21 +40,22 @@ export default {
 
     headers: [
       {
-        text: 'Display Name',
-        value: 'displayName',
-        sortable: false,
+        text: 'ID',
+        value: 'id',
+        sortable: true,
+        width: 150
+      },
+      {
+        text: 'Name',
+        value: 'name',
+        sortable: true,
         width: 150
       },
       {
         text: 'Email',
-        value: 'username',
-        sortable: false,
+        value: 'email',
+        sortable: true,
         width: 200
-      },
-      {
-        text: 'Scopes',
-        value: 'scopes',
-        sortable: false
       },
       {
         width: 180,
@@ -74,7 +77,11 @@ export default {
     edit(item) {
       this.$router.push(`/user?id=${item.id}`);
     },
-    loadData() {
+    async deleteService(item) {
+      await this.service.delete(item)
+    },
+    async loadData() {
+      console.log(await this.service.fetchAll(),'data after api call')
       return this.service.fetchAll();
     }
   }
