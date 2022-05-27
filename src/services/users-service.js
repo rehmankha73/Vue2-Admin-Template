@@ -14,12 +14,12 @@ export class UsersService {
 
     async update(user) {
         // return (await axios.patch('/users', user)).data;
-        return (await axios.patch('/api/companies', user)).data;
+        return (await axios.patch('/api/companies/'+ user.id, user)).data.data;
     }
 
     async create(user) {
         // return (await axios.post('/users', user)).data;
-        return (await axios.post('/api/companies', user)).data;
+        return (await axios.post('/api/companies', user)).data.data;
     }
 
     async delete(user) {

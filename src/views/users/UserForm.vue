@@ -3,51 +3,40 @@
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
     <v-text-field
-        v-model="user.displayName"
-        label="Display Name"
-        :rules="[required('A display name must be provided')]"
-        outlined
+        v-model="user.name"
+        :rules="[required('A name must be provided')]"
+        persistent-hint
+        hint="Must be a authentic Name"
         class="span-2"
+        label="Name"
+        outlined
     />
     <v-text-field
-        v-model="user.username"
-        label="Username or Email"
-        dense
-        :rules="[required('Username must be provided')]"
+        v-model="user.email"
+        :rules="[required('A email must be provided')]"
+        persistent-hint
+        hint="Must be a authentic and unique email/"
+        class="span-2"
+        label="Email"
+        outlined
+    />
+    <v-text-field
+        v-model="user.address"
+        :rules="[required('Address must be provided')]"
+        class="span-2"
+        hint="Must be a authentic address"
+        label="Address"
         outlined
         persistent-hint
-        hint="Must be a unique email or name"
-        class="span-2"
     />
     <v-text-field
-        v-model="user.password"
-        label="Password"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        outlined
-    />
-    <v-text-field
-        v-model="confirmPassword"
-        label="Confirm Password"
-        :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        outlined
-    />
-    <v-checkbox
-        v-model="showPassword"
-        label="Show Password"
-        style="margin-top: -15px"
-    />
-
-    <p class="span-2">Select User Scopes</p>
-
-    <v-treeview
-        v-model="user.scopes"
-        :items="items"
-        selectable
-        style="text-align: left"
+        v-model="user.website"
         class="span-2"
+        type="url"
+        label="Website"
+        persistent-hint
+        hint="Must be a valid website url"
+        outlined
     />
 
     <loading-dialog v-model="loading" message="Fetching User Data"/>
@@ -71,7 +60,10 @@ export default {
     service: new UsersService(),
     confirmPassword: '',
     user: {
-      scopes: []
+      name: '',
+      email: '',
+      address: '',
+      website: '',
     },
 
     items: [
@@ -277,7 +269,7 @@ export default {
       this.isEdit = true;
       this.loading = true;
       this.user = await this.service.fetchOne(this.$route.query.id);
-      this.confirmPassword = this.user.password
+      // this.confirmPassword = this.user.password
       this.loading = false;
     },
     async submit(context) {
