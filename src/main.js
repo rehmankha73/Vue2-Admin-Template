@@ -3,13 +3,23 @@ import App from './App.vue';
 import vuetify from './plugins/vuetify';
 import router from './router';
 import axios from "axios";
-
 Vue.config.productionTip = false;
-
 import './assets/style.sass';
+import vueFilePond from "vue-filepond";
+import "filepond/dist/filepond.min.css";
+import "filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.css";
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+
+// Create component
+const FilePond = vueFilePond(
+    FilePondPluginFileValidateType,
+    FilePondPluginImagePreview
+);
+
 
 Vue.prototype.$axios = axios
-axios.defaults.baseURL = 'http://127.0.0.1:8000'
+axios.defaults.baseURL = 'http://127.0.0.1:8000/api/'
 // axios.defaults.baseURL = ''
 
 axios.interceptors.request.use(
@@ -50,5 +60,6 @@ axios.interceptors.response.use(
 new Vue({
     vuetify,
     router,
+    FilePond,
     render: (h) => h(App)
 }).$mount('#app');

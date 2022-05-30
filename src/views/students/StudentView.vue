@@ -5,16 +5,23 @@
   <data-table
       :allow-add="true"
       :delete-handler="deleteService"
-      :view-handler="showService"
       :edit-handler="edit"
       :headers="headers"
       :loader="loadData"
-      title="Users"
+      title="Students"
       @done="$router.back()"
       @add-new="addNew"
   >
     <template #createdAt="{ item }">
       {{ formatDate(item.createdAt) }}
+    </template>
+
+    <template #image="{ item }">
+      <v-img
+          max-height="150"
+          max-width="250"
+          :src="item.image"
+      ></v-img>
     </template>
 
     <!--    <template #scopes="{ item }">-->
@@ -25,7 +32,7 @@
 
 <script>
 import dayjs from 'dayjs';
-import {UsersService} from '@/services/users-service';
+import {StudentsService} from '@/services/students-service';
 import DataTable from '../../components/DataTable';
 import {getUser} from '@/utils/local';
 
@@ -38,14 +45,20 @@ export default {
   data: () => ({
     items: [],
     loading: false,
-    service: new UsersService(),
+    service: new StudentsService(),
 
     headers: [
       {
-        text: 'ID',
-        value: 'id',
+        text: 'Roll #',
+        value: 'roll_no',
         sortable: true,
         width: 150,
+      },
+      {
+        text: 'Image',
+        value: 'image',
+        sortable: true,
+        width: 150
       },
       {
         text: 'Name',
@@ -58,6 +71,18 @@ export default {
         value: 'email',
         sortable: true,
         width: 200
+      },
+      {
+        text: 'Phone',
+        value: 'phone',
+        sortable: true,
+        width: 200
+      },
+      {
+        text: 'Address',
+        value: 'address',
+        sortable: true,
+        width: 150
       },
       {
         width: 180,
@@ -74,16 +99,14 @@ export default {
     },
 
     addNew() {
-      this.$router.push('/user');
+      this.$router.push('/student');
     },
     edit(item) {
-      this.$router.push(`/user?id=${item.id}`);
+      console.log(item)
+      this.$router.push(`/student?id=${item.id}`);
     },
     async deleteService(item) {
-      await this.service.delete(item)
-    },
-    async showService(item) {
-      await this.service.fetchOne(item)
+      await this.service.delete(item.id)
     },
     async loadData() {
       console.log(await this.service.fetchAll(), 'data after api call')

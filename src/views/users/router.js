@@ -17,4 +17,3 @@ export const usersRoutes = [
 export const usersRouter = usersRoutes.filter(function (x) {
     return x !== null;
 })
-

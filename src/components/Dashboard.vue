@@ -84,6 +84,13 @@ export default {
           icon: 'mdi-account-group',
           isVisible: true
         },
+        {isDivider: true},
+        {
+          to: '/students',
+          title: 'Students',
+          icon: 'mdi-account-school',
+          isVisible: true
+        },
       ];
     }
   }
