@@ -4,9 +4,9 @@
 
     <v-img
         v-if="student.image"
+        :src="student.image"
         max-height="150"
         max-width="250"
-        :src="student.image"
     ></v-img>
 
     <br>
@@ -89,7 +89,7 @@ import SimpleForm from '../../components/Form';
 import {StudentsService} from '@/services/students-service';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
-import {getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
+import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 // import * as FilePond from 'filepond';
 
 export default {
@@ -129,6 +129,36 @@ export default {
       this.myFile = e;
     },
 
+    async uploadImageToFirebase(storage, _file) {
+      const storageRef = ref(storage, _file.name);
+
+      await uploadBytes(storageRef, _file).then(async (snapshot) => {
+        console.log(snapshot, 'snapshot')
+
+        await getDownloadURL(storageRef)
+            .then((url) => {
+              console.log(url, 'url')
+              this.student.image = url;
+            })
+            .catch((error) => {
+              console.log(error, 'error')
+            });
+
+      }).catch(e => {
+        console.log(e)
+      });
+    },
+
+    async deleteImageFromFirebase(storage, file_url) {
+      const desertRef = ref(storage, file_url);
+
+      deleteObject(desertRef).then(() => {
+        // File deleted successfully
+      }).catch((error) => {
+        console.log(error, 'error')
+      });
+    },
+
     async loadStudent() {
       if (!this.$route.query.id) return;
       this.isEdit = true;
@@ -138,19 +168,22 @@ export default {
     },
 
     async submit(context) {
+      const storage = getStorage();
+
       if (this.isEdit) {
         context.changeLoadingMessage('Updating Student');
         try {
-          if(this.myFile) {
 
+          if (this.myFile) {
+            await this.deleteImageFromFirebase(storage, this.student.image);
+            await this.uploadImageToFirebase(storage, this.myFile);
           }
 
-
-
-          console.log(this.student.id)
+          console.log(this.student,'id')
           await this.service.update(this.student, this.$route.query.id);
           return true
         } catch (e) {
+          console.log(e)
           context.reportError({
             'title': 'Error while creating Student',
             'description': e.response.data.error
@@ -165,32 +198,15 @@ export default {
 
           // image uploads
           if (this.myFile) {
-            let _file = this.myFile;
-            const storage = getStorage();
-            const storageRef = ref(storage, _file.name);
-
-            await uploadBytes(storageRef, _file).then(async (snapshot) => {
-              console.log(snapshot, 'snapshot')
-
-              await getDownloadURL(storageRef)
-                  .then((url) => {
-                    console.log(url, 'url')
-                    this.student.image = url;
-                  })
-                  .catch((error) => {
-                    console.log(error, 'error')
-                  });
-
-            }).catch(e => {
-              console.log(e)
-            });
+            await this.uploadImageToFirebase(storage, this.myFile);
           }
 
           console.log(this.student)
           await this.service.create(this.student, this.getRandomId());
           return true
         } catch (e) {
-          console.log(e)
+          console.log(e.response)
+          console.log(e.response)
           context.reportError({
             'title': 'Error while creating Student',
             'description': e.response.data.error

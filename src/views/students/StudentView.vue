@@ -106,7 +106,7 @@ export default {
       this.$router.push(`/student?id=${item.id}`);
     },
     async deleteService(item) {
-      await this.service.delete(item.id)
+      await this.service.delete(item)
     },
     async loadData() {
       console.log(await this.service.fetchAll(), 'data after api call')

@@ -1,6 +1,7 @@
 import {db} from "../firebase_config"
 
 import {collection, deleteDoc, doc, getDoc, getDocs, setDoc} from 'firebase/firestore/lite';
+import {deleteObject, getStorage, ref} from "firebase/storage";
 
 export class StudentsService {
     async fetchAll() {
@@ -23,7 +24,9 @@ export class StudentsService {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-            return docSnap.data();
+            let data = docSnap.data()
+            data.id = docSnap.id
+            return data
         } else {
             console.log("No such document!");
         }
@@ -34,8 +37,18 @@ export class StudentsService {
         await setDoc(doc(studentsRef, _id), student);
     }
 
-    async delete(_id) {
-        await deleteDoc(doc(db, "students", _id));
+    async delete(student) {
+        if(student.image) {
+            const desertRef = ref(getStorage(), student.image);
+
+            deleteObject(desertRef).then(() => {
+                // File deleted successfully
+            }).catch((error) => {
+                console.log(error, 'error')
+            });
+        }
+
+        await deleteDoc(doc(db, "students", student.id));
     }
 }
 
