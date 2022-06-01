@@ -2,26 +2,24 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
-    <v-img
-        v-if="student.image"
-        :src="student.image"
-        max-height="150"
-        max-width="250"
-    ></v-img>
+    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
+      <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
+      <div v-if="!image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
+        + Select/Drop Image
+      </div>
 
-    <br>
+      <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
+        <img :src="student.image" alt="" class="img"/>
+        <button class="icon" @click="removeFile">X</button>
+      </div>
+    </div>
 
-    <v-file-input
-        ref="file"
-        counter
-        show-size
-        @change="uploadImage"
-    ></v-file-input>
 
     <v-text-field
+        disabled
         v-model="student.roll_no"
         :rules="[required('A roll_no must be provided')]"
-        class="span-2"
+        class="span-2 mt-4"
         hint="Must be a unique Roll #"
         label="Roll #"
         outlined
@@ -69,17 +67,6 @@
         persistent-hint
     />
 
-    <!--    <file-pond-->
-    <!--        ref="pond"-->
-    <!--        accepted-file-types="image/jpeg, image/png"-->
-    <!--        label-idle="Drop files here..."-->
-    <!--        name="test"-->
-    <!--        server="/api"-->
-    <!--        v-bind:allow-multiple="true"-->
-    <!--        :files="myFiles"-->
-    <!--        :init="handleFilePondInit"-->
-    <!--    />-->
-
     <loading-dialog v-model="loading" message="Fetching Student Data"/>
   </SimpleForm>
 </template>
@@ -90,15 +77,13 @@ import {StudentsService} from '@/services/students-service';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
-// import * as FilePond from 'filepond';
 
 export default {
   name: 'Form',
-  // components: {LoadingDialog, SimpleForm, FilePond},
   components: {LoadingDialog, SimpleForm},
 
   data: () => ({
-    myFile: null,
+    image: null,
     isEdit: false,
     loading: false,
     showPassword: false,
@@ -117,16 +102,44 @@ export default {
 
   mounted() {
     this.loadStudent();
+    if (!this.isEdit) {
+      this.student.roll_no = parseInt(this.$route.query.total_students) + 1;
+    }
   },
 
   methods: {
-    handleFilePondInit() {
-      console.log("FilePond has initialized");
-
-    },
     required,
-    async uploadImage(e) {
-      this.myFile = e;
+
+    onDrop: function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      let files = e.dataTransfer.files;
+      this.createFile(files[0]);
+    },
+    onChange(e) {
+      let files = e.target.files;
+      this.createFile(files[0]);
+    },
+    createFile(file) {
+      console.log(file)
+      let reader = new FileReader();
+      this.image = file;
+      let vm = this;
+
+      reader.readAsDataURL(file);
+
+      reader.onload = function (e) {
+        vm.student.image = e.target.result;
+      }
+      console.log(this.student)
+    },
+    removeFile() {
+      this.image = '';
+    },
+
+    uploadImage(e) {
+      console.log(e.target.files[0])
+      this.image = e.target.files[0];
     },
 
     async uploadImageToFirebase(storage, _file) {
@@ -164,6 +177,7 @@ export default {
       this.isEdit = true;
       this.loading = true;
       this.student = await this.service.fetchOne(this.$route.query.id);
+      this.image = this.student.image;
       this.loading = false;
     },
 
@@ -173,13 +187,12 @@ export default {
       if (this.isEdit) {
         context.changeLoadingMessage('Updating Student');
         try {
-
-          if (this.myFile) {
+          if (this.image) {
             await this.deleteImageFromFirebase(storage, this.student.image);
-            await this.uploadImageToFirebase(storage, this.myFile);
+            await this.uploadImageToFirebase(storage, this.image);
           }
 
-          console.log(this.student,'id')
+          console.log(this.student, 'id')
           await this.service.update(this.student, this.$route.query.id);
           return true
         } catch (e) {
@@ -197,8 +210,8 @@ export default {
         try {
 
           // image uploads
-          if (this.myFile) {
-            await this.uploadImageToFirebase(storage, this.myFile);
+          if (this.image) {
+            await this.uploadImageToFirebase(storage, this.image);
           }
 
           console.log(this.student)
@@ -229,4 +242,84 @@ p {
   font-weight: bold;
   text-align: left;
 }
+
+.icon {
+  position: absolute;
+  color:red;
+  top: 0;
+  right: 5px;
+}
+
+html, body {
+  height: 100%;
+  text-align: center;
+}
+
+.btn {
+  background-color: #d3394c;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: bold;
+  padding: 15px 35px;
+  position: relative;
+}
+
+.btn:hover {
+  background-color: #722040;
+}
+
+input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.helper {
+  height: 100%;
+  display: inline-block;
+  vertical-align: middle;
+  width: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.hidden.image {
+  display: inline-block !important;
+}
+
+.display-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.img {
+  border: 1px solid #f6f6f6;
+  display: inline-block;
+  height: 200px;
+  width: 200px;
+  margin-left: -2px;
+  margin-top: -2px;
+  object-fit: contain;
+}
+
+.drop {
+  background-color: #f2f2f2;
+  border: 2px dashed #ccc;
+  border-radius: 2px;
+  height: 200px;
+  width: 200px;
+}
+
+.cursor-pointer{
+  cursor: pointer;
+}
+
 </style>

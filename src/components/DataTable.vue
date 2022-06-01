@@ -55,15 +55,10 @@
           >
             <slot name="extra-actions" :item="item" />
 
-            <v-icon v-if="viewHandler" small @click="viewHandler(item)">
+            <v-icon v-if="viewHandler" small @click="viewHandler(item)" color="blue">
               mdi-eye
             </v-icon>
-            <v-icon
-              v-if="editHandler"
-              small
-              @click="editHandler(item)"
-              color="green"
-            >
+            <v-icon v-if="editHandler" small @click="editHandler(item)" color="green">
               mdi-pencil
             </v-icon>
             <v-icon

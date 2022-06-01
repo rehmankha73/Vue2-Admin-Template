@@ -4,10 +4,12 @@
   <!--  :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"-->
   <data-table
       :allow-add="true"
+      :allow-filters="true"
       :delete-handler="deleteService"
       :edit-handler="edit"
       :headers="headers"
       :loader="loadData"
+      :view-handler="view"
       title="Students"
       @done="$router.back()"
       @add-new="addNew"
@@ -17,11 +19,14 @@
     </template>
 
     <template #image="{ item }">
-      <v-img
-          max-height="150"
-          max-width="250"
-          :src="item.image"
-      ></v-img>
+      <v-avatar>
+        <v-img
+            :src="item.image"
+            max-height="150"
+            max-width="250"
+        ></v-img>
+      </v-avatar>
+
     </template>
 
     <!--    <template #scopes="{ item }">-->
@@ -43,6 +48,7 @@ export default {
   },
 
   data: () => ({
+    total_students: '',
     items: [],
     loading: false,
     service: new StudentsService(),
@@ -79,12 +85,6 @@ export default {
         width: 200
       },
       {
-        text: 'Address',
-        value: 'address',
-        sortable: true,
-        width: 150
-      },
-      {
         width: 180,
         text: 'Created At',
         value: 'createdAt'
@@ -99,18 +99,28 @@ export default {
     },
 
     addNew() {
-      this.$router.push('/student');
+      this.$router.push(`/student?total_students=${this.total_students}`);
     },
     edit(item) {
       console.log(item)
       this.$router.push(`/student?id=${item.id}`);
+    },
+    view(item) {
+      console.log(item)
+      this.$router.push(`/student-details?id=${item.id}`);
     },
     async deleteService(item) {
       await this.service.delete(item)
     },
     async loadData() {
       console.log(await this.service.fetchAll(), 'data after api call')
-      return this.service.fetchAll();
+      let _data = await this.service.fetchAll();
+      console.log(_data.length, 'total records')
+      this.total_students = _data.length;
+      _data.sort(function (x, y) {
+        return parseInt(x.roll_no) - parseInt(y.roll_no);
+      });
+      return _data
     }
   }
 };
