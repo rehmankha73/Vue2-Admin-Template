@@ -3,7 +3,7 @@
     <v-app-bar app dark color="primary" elevate-on-scroll>
       <v-app-bar-nav-icon @click="drawer = !drawer"/>
 
-      <v-card-title>Template 1</v-card-title>
+      <v-card-title>School Management System!</v-card-title>
       <v-spacer/>
 
       <profile-popup/>
@@ -72,13 +72,6 @@ export default {
         },
         {isDivider: true},
         {
-          to: '/notifications',
-          title: 'Notifications',
-          icon: 'mdi-bell',
-          isVisible: true
-        },
-        {isDivider: true},
-        {
           to: '/users',
           title: 'Users',
           icon: 'mdi-account-group',
@@ -89,6 +82,13 @@ export default {
           to: '/students',
           title: 'Students',
           icon: 'mdi-account-school',
+          isVisible: true
+        },
+        {isDivider: true},
+        {
+          to: '/classes',
+          title: 'Classes',
+          icon: 'mdi-book',
           isVisible: true
         },
       ];

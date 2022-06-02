@@ -6,8 +6,8 @@ import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
 
 import {usersRouter} from './views/users/router';
-import {notificationsRouter} from './views/notifications/router';
 import {studentsRoutes} from "@/views/students/router";
+import {classesRouter} from "@/views/classes/router";
 
 Vue.use(VueRouter);
 
@@ -20,9 +20,9 @@ const routes = [
                 path: '/',
                 component: Home
             },
-            ...studentsRoutes,
             ...usersRouter,
-            ...notificationsRouter,
+            ...studentsRoutes,
+            ...classesRouter
         ]
     },
     {
