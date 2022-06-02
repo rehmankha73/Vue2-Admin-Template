@@ -7,8 +7,7 @@
         <v-card-text>
           <v-img
               :src="student.image"
-              height="200"
-              width="200"
+              style="height:200px; width:200px; object-fit: contain"
           >
           </v-img>
         </v-card-text>

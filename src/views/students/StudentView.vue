@@ -18,6 +18,7 @@
       {{ formatDate(item.createdAt) }}
     </template>
 
+
     <template #image="{ item }">
       <v-avatar>
         <v-img
@@ -40,6 +41,7 @@ import dayjs from 'dayjs';
 import {StudentsService} from '@/services/students-service';
 import DataTable from '../../components/DataTable';
 import {getUser} from '@/utils/local';
+import {ClassesService} from "@/services/classes-service";
 
 export default {
   components: {DataTable},
@@ -48,10 +50,11 @@ export default {
   },
 
   data: () => ({
-    total_students: '',
+    new_roll_no: '',
     items: [],
     loading: false,
     service: new StudentsService(),
+    classes: new ClassesService(),
 
     headers: [
       {
@@ -99,7 +102,7 @@ export default {
     },
 
     addNew() {
-      this.$router.push(`/student?total_students=${this.total_students}`);
+      this.$router.push(`/student?new_roll_no=${this.new_roll_no}`);
     },
     edit(item) {
       console.log(item)
@@ -115,8 +118,10 @@ export default {
     async loadData() {
       console.log(await this.service.fetchAll(), 'data after api call')
       let _data = await this.service.fetchAll();
-      console.log(_data.length, 'total records')
-      this.total_students = _data.length;
+      let roll_no_array = []
+      _data.forEach(s => roll_no_array.push((s.roll_no)));
+      this.new_roll_no = parseInt(Math.max(...roll_no_array)) + 1;
+
       _data.sort(function (x, y) {
         return parseInt(x.roll_no) - parseInt(y.roll_no);
       });

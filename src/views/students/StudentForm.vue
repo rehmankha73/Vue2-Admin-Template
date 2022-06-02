@@ -14,7 +14,6 @@
       </div>
     </div>
 
-
     <v-text-field
         disabled
         v-model="student.roll_no"
@@ -26,6 +25,19 @@
         persistent-hint
         type="number"
     />
+
+    <div
+        class="d-flex span-2"
+    >
+      <v-select
+          v-model="student.class_id"
+          item-value="value" item-text="text"
+          :items="getClassesItems()"
+          label="Class"
+          outlined
+      ></v-select>
+    </div>
+
 
     <v-text-field
         v-model="student.name"
@@ -74,6 +86,7 @@
 <script>
 import SimpleForm from '../../components/Form';
 import {StudentsService} from '@/services/students-service';
+import {ClassesService} from "@/services/classes-service";
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
@@ -88,8 +101,11 @@ export default {
     loading: false,
     showPassword: false,
     service: new StudentsService(),
+    classes: new ClassesService(),
     confirmPassword: '',
+    class_data: [],
     student: {
+      class_id: '',
       roll_no: '',
       image: '',
       name: '',
@@ -100,15 +116,26 @@ export default {
 
   }),
 
+  computed: {
+
+  },
+
   mounted() {
     this.loadStudent();
+    this.getClassesData();
     if (!this.isEdit) {
-      this.student.roll_no = parseInt(this.$route.query.total_students) + 1;
+      this.student.roll_no = parseInt(this.$route.query.new_roll_no);
     }
   },
 
   methods: {
     required,
+
+    getClassesItems() {
+      let _data = [];
+      this.class_data.forEach((c) => { _data.push({ value: c.id, text: c.title}) })
+      return _data;
+    },
 
     onDrop: function (e) {
       e.stopPropagation();
@@ -137,9 +164,9 @@ export default {
       this.image = '';
     },
 
-    uploadImage(e) {
-      console.log(e.target.files[0])
-      this.image = e.target.files[0];
+    async getClassesData() {
+      this.class_data = await this.classes.fetchAll();
+      console.log(this.class_data)
     },
 
     async uploadImageToFirebase(storage, _file) {
