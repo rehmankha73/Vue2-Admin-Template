@@ -15,7 +15,6 @@ export class ClassesService {
     }
 
     async create(classes, _id) {
-        console.log(classes, 'data')
         await setDoc(doc(db, "classes", _id), classes);
     }
 

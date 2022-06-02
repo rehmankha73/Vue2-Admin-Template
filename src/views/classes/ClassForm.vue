@@ -92,7 +92,6 @@ export default {
 
     async getTeachersData() {
       this.teacher_data_items = await this.teachers.fetchAll();
-      console.log(this.teacher_data_items)
     },
 
     async loadClass() {
@@ -122,8 +121,6 @@ export default {
 
         context.changeLoadingMessage('Creating A New Class');
         try {
-
-          console.log(this.class_data)
           await this.classes.create(this.class_data, this.getRandomId());
           return true
         } catch (e) {

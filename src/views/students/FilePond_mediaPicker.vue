@@ -127,8 +127,7 @@ async function uploadWithMessage(context, list, message, type) {
 }
 
 async function generateThumbnail(item) {
-  console.log(item)
-  console.log('thumbnail')
+  console.log(item, 'thumbnail')
   const binaryData = []
   binaryData.push(item.file)
   const canvas = document.createElement('canvas')

@@ -76,18 +76,15 @@ export default {
       this.$router.push('/class');
     },
     edit(item) {
-      console.log(item)
       this.$router.push(`/class?id=${item.id}`);
     },
     view(item) {
-      console.log(item)
       this.$router.push(`/class-details?id=${item.id}`);
     },
     async deleteService(item) {
       await this.classes.delete(item)
     },
     async loadData() {
-      console.log(await this.classes.fetchAll(), 'data after api call')
       return await this.classes.fetchAll()
     }
   }

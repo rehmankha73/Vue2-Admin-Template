@@ -148,7 +148,6 @@ export default {
       this.createFile(files[0]);
     },
     createFile(file) {
-      console.log(file)
       let reader = new FileReader();
       this.image = file;
       let vm = this;
@@ -166,7 +165,6 @@ export default {
 
     async getClassesData() {
       this.class_data = await this.classes.fetchAll();
-      console.log(this.class_data)
     },
 
     async uploadImageToFirebase(storage, _file) {
@@ -218,8 +216,6 @@ export default {
             await this.deleteImageFromFirebase(storage, this.student.image);
             await this.uploadImageToFirebase(storage, this.image);
           }
-
-          console.log(this.student, 'id')
           await this.service.update(this.student, this.$route.query.id);
           return true
         } catch (e) {
@@ -241,11 +237,9 @@ export default {
             await this.uploadImageToFirebase(storage, this.image);
           }
 
-          console.log(this.student)
           await this.service.create(this.student, this.getRandomId());
           return true
         } catch (e) {
-          console.log(e.response)
           console.log(e.response)
           context.reportError({
             'title': 'Error while creating Student',

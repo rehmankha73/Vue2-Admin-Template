@@ -86,7 +86,6 @@ export default {
       await this.service.fetchOne(item)
     },
     async loadData() {
-      console.log(await this.service.fetchAll(), 'data after api call')
       return this.service.fetchAll();
     }
   }

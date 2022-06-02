@@ -105,18 +105,15 @@ export default {
       this.$router.push(`/student?new_roll_no=${this.new_roll_no}`);
     },
     edit(item) {
-      console.log(item)
       this.$router.push(`/student?id=${item.id}`);
     },
     view(item) {
-      console.log(item)
       this.$router.push(`/student-details?id=${item.id}`);
     },
     async deleteService(item) {
       await this.service.delete(item)
     },
     async loadData() {
-      console.log(await this.service.fetchAll(), 'data after api call')
       let _data = await this.service.fetchAll();
       let roll_no_array = []
       _data.forEach(s => roll_no_array.push((s.roll_no)));
