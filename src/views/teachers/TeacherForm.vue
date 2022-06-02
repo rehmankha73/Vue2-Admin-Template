@@ -1,49 +1,21 @@
 <template>
   <SimpleForm :onSubmit="submit" @done="$router.back()">
-    <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
+    <p class="span-2 form__title">{{ isEdit ? 'Update Teacher' : 'Create New Teacher' }}</p>
 
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
       <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
-      <div v-if="!student.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
+      <div v-if="!teacher.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
         + Select/Drop Image
       </div>
 
       <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
-        <img :src="student.image" alt="" class="img"/>
+        <img :src="teacher.image" alt="" class="img"/>
         <button class="icon" @click="removeFile">X</button>
       </div>
     </div>
 
     <v-text-field
-        disabled
-        v-model="student.roll_no"
-        :rules="[required('A roll_no must be provided')]"
-        class="span-2 mt-4"
-        hint="Must be a unique Roll #"
-        label="Roll #"
-        outlined
-        persistent-hint
-        type="number"
-    />
-
-    <div
-        class="d-flex span-2"
-    >
-      <v-select
-          v-model="student.class_id"
-          item-value="value" item-text="text"
-          :items="getClassesItems()"
-          :rules="[required('A class must be provided')]"
-          label="Class"
-          hint="Select Class from the following"
-          persistent-hint
-          outlined
-      ></v-select>
-    </div>
-
-
-    <v-text-field
-        v-model="student.name"
+        v-model="teacher.name"
         :rules="[required('A name must be provided')]"
         class="span-2"
         hint="Must be a authentic Name"
@@ -53,7 +25,17 @@
     />
 
     <v-text-field
-        v-model="student.email"
+        v-model="teacher.subject"
+        :rules="[required('A subject must be provided')]"
+        class="span-2"
+        hint="Must be a Subject"
+        label="Subject"
+        outlined
+        persistent-hint
+    />
+
+    <v-text-field
+        v-model="teacher.email"
         :rules="[required('A email must be provided')]"
         class="span-2"
         hint="Must be a authentic and unique email/"
@@ -63,7 +45,7 @@
     />
 
     <v-text-field
-        v-model="student.phone"
+        v-model="teacher.phone"
         :rules="[required('A Phone must be provided')]"
         class="span-2"
         hint="Must be a authentic Phone Number."
@@ -73,7 +55,7 @@
     />
 
     <v-text-field
-        v-model="student.address"
+        v-model="teacher.address"
         :rules="[required('Address must be provided')]"
         class="span-2"
         hint="Must be a authentic address"
@@ -82,17 +64,47 @@
         persistent-hint
     />
 
-    <loading-dialog v-model="loading" message="Fetching Student Data"/>
+    <v-checkbox
+        class="span-2"
+        v-model="teacher.is_working"
+        label="Is Working"
+    ></v-checkbox>
+
+
+    <div class="span-2 mt-2">
+      <label for="date_of_joining" style="color:#9E9E9E">
+        Date of Joining
+        <input
+            v-model="teacher.date_of_joining"
+            id="date_of_joining"
+            type="date"
+            class="span-2 date-type-style"
+            placeholder="Date of Joining" />
+      </label>
+    </div>
+
+    <div v-if="!teacher.is_working" class="span-2 mt-4">
+      <label for="date_of_leaving" style="color:#9E9E9E">
+        Date of Leaving
+        <input
+            v-model="teacher.date_of_leaving"
+            id="date_of_leaving"
+            type="date"
+            class="span-2 date-type-style"
+            placeholder="Date of Leaving" />
+      </label>
+    </div>
+
+    <loading-dialog v-model="loading" message="Fetching Teacher Data"/>
   </SimpleForm>
 </template>
 
 <script>
 import SimpleForm from '../../components/Form';
-import {StudentsService} from '@/services/students-service';
-import {ClassesService} from "@/services/classes-service";
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
+import {TeachersService} from "@/services/teachers-service";
 
 export default {
   name: 'Form',
@@ -104,36 +116,28 @@ export default {
     isEdit: false,
     loading: false,
     showPassword: false,
-    students_service: new StudentsService(),
-    classes_service: new ClassesService(),
+    teachers_service: new TeachersService(),
     confirmPassword: '',
     class_data: [],
-    student: {
-      class_id: '',
-      roll_no: '',
+    teacher: {
       image: '',
       name: '',
       email: '',
       phone: '',
       address: '',
+      subject: '',
+      is_working: true,
+      date_of_joining: '',
+      date_of_leaving: '',
     },
   }),
 
   mounted() {
-    this.loadStudent();
-    this.getClassesData();
-    if (!this.isEdit) {
-      this.student.roll_no = parseInt(this.$route.query.new_roll_no);
-    }
+    this.loadTeacher();
   },
 
   methods: {
     required,
-    getClassesItems() {
-      let _data = [];
-      this.class_data.forEach((c) => { _data.push({ value: c.id, text: c.title}) })
-      return _data;
-    },
 
     onDrop: function (e) {
       e.stopPropagation();
@@ -141,10 +145,12 @@ export default {
       let files = e.dataTransfer.files;
       this.createFile(files[0]);
     },
+
     onChange(e) {
       let files = e.target.files;
       this.createFile(files[0]);
     },
+
     createFile(file) {
       let reader = new FileReader();
       this.image = file;
@@ -153,16 +159,13 @@ export default {
       reader.readAsDataURL(file);
 
       reader.onload = function (e) {
-        vm.student.image = e.target.result;
+        vm.teacher.image = e.target.result;
       }
-      console.log(this.student)
-    },
-    removeFile() {
-      this.image = '';
+      console.log(this.teacher)
     },
 
-    async getClassesData() {
-      this.class_data = await this.classes_service.fetchAll();
+    removeFile() {
+      this.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
@@ -174,7 +177,7 @@ export default {
         await getDownloadURL(storageRef)
             .then((url) => {
               console.log(url, 'url')
-              this.student.image = url;
+              this.teacher.image = url;
             })
             .catch((error) => {
               console.log(error, 'error')
@@ -195,12 +198,13 @@ export default {
       });
     },
 
-    async loadStudent() {
+    async loadTeacher() {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
-      this.student = await this.students_service.fetchOne(this.$route.query.id);
-      this.old_image_url = this.student.image;
+      this.teacher = await this.teachers_service.fetchOne(this.$route.query.id);
+      console.log(this.teacher,'teacher')
+      this.old_image_url = this.teacher.image;
       this.loading = false;
     },
 
@@ -208,39 +212,51 @@ export default {
       const storage = getStorage();
 
       if (this.isEdit) {
-        context.changeLoadingMessage('Updating Student');
+        context.changeLoadingMessage('Updating Teacher');
         try {
+          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+            console.log('Invalid date, it is impossible to leave before join!')
+            return ;
+          }
+
           if (this.image) {
             await this.deleteImageFromFirebase(storage, this.old_image_url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
           }
-          await this.students_service.update(this.student, this.$route.query.id);
+
+          await this.teachers_service.update(this.teacher, this.$route.query.id);
           return true
         } catch (e) {
           console.log(e)
           context.reportError({
-            'title': 'Error while creating Student',
+            'title': 'Error while creating Teacher',
             'description': e.response.data.error
           })
-
           return false
         }
       } else {
-
-        context.changeLoadingMessage('Creating A New Student');
+        context.changeLoadingMessage('Creating A New Teacher');
         try {
+          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+            console.log('Invalid date, it is impossible to leave before join!')
+            return ;
+          }
+
           let _id = this.getRandomId();
           // image uploads
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, _id);
           }
 
-          await this.students_service.create(this.student, _id);
+          this.teacher.date_of_joining = new Date(this.teacher.date_of_joining);
+          this.teacher.date_of_leaving = new Date(this.teacher.date_of_leaving);
+
+          await this.teachers_service.create(this.teacher, _id);
           return true
         } catch (e) {
           console.log(e.response)
           context.reportError({
-            'title': 'Error while creating Student',
+            'title': 'Error while creating Teacher',
             'description': e.response.data.error
           })
 
@@ -257,6 +273,20 @@ export default {
 </script>
 
 <style scoped>
+
+.date-type-style {
+  border: 1px solid #9E9E9E;
+  color: #9E9E9E;
+  width: 100%;
+  padding: 15px 5px;
+  border-radius:5px;
+}
+
+.date-type-style:focus {
+  border-color: #1976D2;
+  outline-color: #1976D2;
+}
+
 p {
   font-weight: bold;
   text-align: left;

@@ -1,6 +1,8 @@
-import {db} from "../firebase_config"
+import {db} from "@/firebase_config"
 
 import {collection, deleteDoc, doc, getDoc, getDocs, setDoc} from 'firebase/firestore/lite';
+import {deleteObject, getStorage, ref} from "firebase/storage";
+
 // import {deleteObject, getStorage, ref} from "firebase/storage";
 
 export class StudentsService {
@@ -37,15 +39,15 @@ export class StudentsService {
     }
 
     async delete(student) {
-        // if(student.image) {
-        //     const desertRef = ref(getStorage(), student.image);
-        //
-        //     deleteObject(desertRef).then(() => {
-        //         // File deleted successfully
-        //     }).catch((error) => {
-        //         console.log(error, 'error')
-        //     });
-        // }
+        if(student.image) {
+            const desertRef = ref(getStorage(), student.image);
+
+            deleteObject(desertRef).then(() => {
+                // File deleted successfully
+            }).catch((error) => {
+                console.log(error, 'error')
+            });
+        }
 
         await deleteDoc(doc(db, "students", student.id));
     }

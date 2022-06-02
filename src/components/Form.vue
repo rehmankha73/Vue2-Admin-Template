@@ -30,6 +30,7 @@ export default {
       type: Function,
       required: true
     },
+
     disabled: {
       type: Boolean,
       default: false,

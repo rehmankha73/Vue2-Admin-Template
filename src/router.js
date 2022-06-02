@@ -6,8 +6,10 @@ import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
 
 import {usersRouter} from './views/users/router';
-import {studentsRoutes} from "@/views/students/router";
 import {classesRouter} from "@/views/classes/router";
+import {studentsRouter} from "@/views/students/router";
+import {teachersRouter} from "@/views/teachers/router";
+
 
 Vue.use(VueRouter);
 
@@ -21,8 +23,9 @@ const routes = [
                 component: Home
             },
             ...usersRouter,
-            ...studentsRoutes,
-            ...classesRouter
+            ...studentsRouter,
+            ...classesRouter,
+            ...teachersRouter,
         ]
     },
     {

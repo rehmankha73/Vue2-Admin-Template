@@ -22,6 +22,8 @@
           :items="getTeacherDataItems()"
           label="Class In-charge Teacher"
           outlined
+          hint="Select Teacher from the following"
+          persistent-hint
       ></v-select>
     </div>
 
@@ -30,9 +32,9 @@
         :rules="[required('A title must be provided')]"
         class="span-2"
         hint="Must be a title"
+        persistent-hint
         label="Title"
         outlined
-        persistent-hint
     />
 
     <v-text-field
