@@ -70,7 +70,6 @@ export default {
           icon: 'mdi-view-dashboard-variant',
           isVisible: true
         },
-        {isDivider: true},
         {
           to: '/users',
           title: 'Users',
@@ -79,16 +78,21 @@ export default {
         },
         {isDivider: true},
         {
+          to: '/classes',
+          title: 'Classes',
+          icon: 'mdi-book',
+          isVisible: true
+        },
+        {
           to: '/students',
           title: 'Students',
           icon: 'mdi-account-school',
           isVisible: true
         },
-        {isDivider: true},
         {
-          to: '/classes',
-          title: 'Classes',
-          icon: 'mdi-book',
+          to: '/teachers',
+          title: 'Teachers',
+          icon: 'mdi-account-tie',
           isVisible: true
         },
       ];

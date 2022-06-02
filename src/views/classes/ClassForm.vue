@@ -65,7 +65,7 @@ export default {
     isEdit: false,
     loading: false,
     showPassword: false,
-    classes: new ClassesService(),
+    classes_service: new ClassesService(),
     teachers: new TeachersService(),
     confirmPassword: '',
     teacher_data_items: [],
@@ -98,7 +98,7 @@ export default {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
-      this.class_data = await this.classes.fetchOne(this.$route.query.id);
+      this.class_data = await this.classes_service.fetchOne(this.$route.query.id);
       this.loading = false;
     },
 
@@ -106,7 +106,7 @@ export default {
       if (this.isEdit) {
         context.changeLoadingMessage('Updating Class');
         try {
-          await this.classes.update(this.class_data, this.$route.query.id);
+          await this.classes_service.update(this.class_data, this.$route.query.id);
           return true
         } catch (e) {
           console.log(e)
@@ -121,7 +121,7 @@ export default {
 
         context.changeLoadingMessage('Creating A New Class');
         try {
-          await this.classes.create(this.class_data, this.getRandomId());
+          await this.classes_service.create(this.class_data, this.getRandomId());
           return true
         } catch (e) {
           console.log(e.response)

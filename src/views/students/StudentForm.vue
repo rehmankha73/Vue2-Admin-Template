@@ -100,8 +100,8 @@ export default {
     isEdit: false,
     loading: false,
     showPassword: false,
-    service: new StudentsService(),
-    classes: new ClassesService(),
+    students_service: new StudentsService(),
+    classes_service: new ClassesService(),
     confirmPassword: '',
     class_data: [],
     student: {
@@ -164,7 +164,7 @@ export default {
     },
 
     async getClassesData() {
-      this.class_data = await this.classes.fetchAll();
+      this.class_data = await this.classes_service.fetchAll();
     },
 
     async uploadImageToFirebase(storage, _file) {
@@ -201,7 +201,7 @@ export default {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
-      this.student = await this.service.fetchOne(this.$route.query.id);
+      this.student = await this.students_service.fetchOne(this.$route.query.id);
       this.image = this.student.image;
       this.loading = false;
     },
@@ -216,7 +216,7 @@ export default {
             await this.deleteImageFromFirebase(storage, this.student.image);
             await this.uploadImageToFirebase(storage, this.image);
           }
-          await this.service.update(this.student, this.$route.query.id);
+          await this.students_service.update(this.student, this.$route.query.id);
           return true
         } catch (e) {
           console.log(e)
@@ -237,7 +237,7 @@ export default {
             await this.uploadImageToFirebase(storage, this.image);
           }
 
-          await this.service.create(this.student, this.getRandomId());
+          await this.students_service.create(this.student, this.getRandomId());
           return true
         } catch (e) {
           console.log(e.response)

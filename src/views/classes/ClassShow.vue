@@ -22,14 +22,14 @@ export default {
     return {
       dataLoading: true,
       class_data: {},
-      classes: new ClassesService(),
+      classes_service: new ClassesService(),
     }
   },
   methods: {
     async loadData() {
       try {
         this.dataLoading = true
-        this.class_data = await this.classes.fetchOne(this.$route.query.id);
+        this.class_data = await this.classes_service.fetchOne(this.$route.query.id);
       } catch (e) {
         console.log(e)
       }

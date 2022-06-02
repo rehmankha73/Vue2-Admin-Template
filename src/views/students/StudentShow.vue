@@ -42,14 +42,14 @@ export default {
     return {
       dataLoading: true,
       student: {},
-      service: new StudentsService(),
+      students_service: new StudentsService(),
     }
   },
   methods: {
     async loadData() {
       try {
         this.dataLoading = true
-        this.student = await this.service.fetchOne(this.$route.query.id);
+        this.student = await this.students_service.fetchOne(this.$route.query.id);
       } catch (e) {
         console.log(e)
       }

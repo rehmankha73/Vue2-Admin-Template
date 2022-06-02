@@ -1,10 +1,9 @@
 <template>
   <!--  :allow-add="getUser() ? getUser().scopes.includes('users:new') : false"-->
-  <!--  :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  service.delete : null : null"-->
+  <!--  :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  students_service.delete : null : null"-->
   <!--  :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"-->
   <data-table
       :allow-add="true"
-      :allow-filters="true"
       :delete-handler="deleteService"
       :edit-handler="edit"
       :headers="headers"
@@ -53,7 +52,7 @@ export default {
     new_roll_no: '',
     items: [],
     loading: false,
-    service: new StudentsService(),
+    students_service: new StudentsService(),
     classes: new ClassesService(),
 
     headers: [
@@ -111,10 +110,10 @@ export default {
       this.$router.push(`/student-details?id=${item.id}`);
     },
     async deleteService(item) {
-      await this.service.delete(item)
+      await this.students_service.delete(item)
     },
     async loadData() {
-      let _data = await this.service.fetchAll();
+      let _data = await this.students_service.fetchAll();
       let roll_no_array = []
       _data.forEach(s => roll_no_array.push((s.roll_no)));
       this.new_roll_no = parseInt(Math.max(...roll_no_array)) + 1;

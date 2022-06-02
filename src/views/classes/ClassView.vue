@@ -1,7 +1,6 @@
 <template>
   <data-table
       :allow-add="true"
-      :allow-filters="true"
       :delete-handler="deleteService"
       :edit-handler="edit"
       :headers="headers"
@@ -37,7 +36,7 @@ export default {
   data: () => ({
     items: [],
     loading: false,
-    classes: new ClassesService(),
+    classes_service: new ClassesService(),
 
     headers: [
       {
@@ -82,10 +81,10 @@ export default {
       this.$router.push(`/class-details?id=${item.id}`);
     },
     async deleteService(item) {
-      await this.classes.delete(item)
+      await this.classes_service.delete(item)
     },
     async loadData() {
-      return await this.classes.fetchAll()
+      return await this.classes_service.fetchAll()
     }
   }
 };
