@@ -12,8 +12,8 @@
       </div>
 
       <v-spacer/>
-      <p id="display-name">{{ this.user.displayName || 'Name' }}</p>
-      <p id="username">{{ this.user.username || 'Email' }}</p>
+      <p id="display-name">{{ this.user.name || 'Name' }}</p>
+      <p id="username">{{ this.user.email || 'Email' }}</p>
 
       <v-spacer/>
       <v-divider style="margin: 0"/>
@@ -39,13 +39,14 @@ export default {
     const token = localStorage.getItem('auth_token');
     if (token) {
       this.user = JSON.parse(localStorage.getItem('auth_user'));
+      console.log(this.user)
     }
   },
 
   methods: {
     resolveLetter() {
-      if (this.user && this.user.displayName) {
-        return this.user.displayName[0]
+      if (this.user && this.user.name) {
+        return this.user.name[0]
       } else {
         return '_'
       }

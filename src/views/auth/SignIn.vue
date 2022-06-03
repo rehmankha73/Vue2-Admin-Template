@@ -44,20 +44,25 @@
 </template>
 
 <script>
-import {required, email} from '@/utils/validators';
+import { required, email } from '@/utils/validators';
 import LoadingDialog from '../../components/LoadingDialog';
 import ErrorDialog from '../../components/ErrorDialog';
+import { auth } from '@/firebase_config';
+import {  signInWithEmailAndPassword } from "firebase/auth";
+import { UsersService} from "@/services/users-service";
 
 export default {
   name: 'SignIn',
   components: {ErrorDialog, LoadingDialog},
 
   data: () => ({
+    users_service: new UsersService(),
     error: false,
     errorVal: {},
     loading: false,
     username: '',
-    password: ''
+    password: '',
+    db_user: null,
   }),
 
   methods: {
@@ -67,18 +72,26 @@ export default {
       if (this.$refs.form.validate()) {
         this.loading = true;
         try {
-          const token = (
-              await this.$axios.post('/auth/login', {
-                username: this.username,
-                password: this.password
+          await signInWithEmailAndPassword(auth, this.username, this.password)
+              .then(async (userCredential) => {
+                // Signed in
+                const user = userCredential.user;
+                console.log(user, 'user');
+
+                this.db_user = await this.users_service.fetchOne(user.uid);
+                console.log(this.db_user, 'db_user')
+
+                localStorage.setItem('auth_token', user.accessToken)
+                localStorage.setItem('auth_user', JSON.stringify(this.db_user))
+                this.$router.push('/')
               })
-          ).data;
-          const user = (await this.$axios.get('/auth/user', {
-            headers: {authorization: 'bearer ' + token.token}
-          })).data;
-          localStorage.setItem('auth_token', token.token)
-          localStorage.setItem('auth_user', JSON.stringify(user))
-          await this.$router.push('/').then(() => this.$router.go())
+              .catch((error) => {
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                console.log(errorCode, 'code')
+                console.log(errorMessage, 'message')
+              });
+
         } catch (e) {
           this.error = true;
           this.errorVal = {

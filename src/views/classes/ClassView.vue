@@ -6,7 +6,7 @@
       :headers="headers"
       :loader="loadData"
       :view-handler="view"
-      title="Classes Data"
+      title="Classes"
       @done="$router.back()"
       @add-new="addNew"
   >

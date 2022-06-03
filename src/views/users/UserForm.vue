@@ -1,14 +1,16 @@
 <template>
   <SimpleForm :onSubmit="submit" @done="$router.back()">
+
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-      <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
-      <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
+      <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
+      <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
+           @click="$refs['file-input'].click();">
         + Select/Drop Image
       </div>
 
-      <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
+      <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
         <img :src="user.image" alt="" class="img"/>
         <button class="icon" @click="removeFile">X</button>
       </div>
@@ -16,52 +18,56 @@
 
     <v-text-field
         v-model="user.name"
-        label="Display Name"
         :rules="[required('A display name must be provided')]"
-        persistent-hint
-        hint="Must be a valid username"
-        outlined
         class="span-2"
+        hint="Must be a valid username"
+        label="Display Name"
+        outlined
+        persistent-hint
     />
 
     <v-text-field
         v-model="user.phone"
-        label="Phone"
         :rules="[required('Phone must be provided')]"
-        outlined
-        persistent-hint
+        class="span-2"
         hint="Must be a valid phone #"
-        class="span-2"
-    />
-
-    <v-text-field
-        v-model="user.email"
-        label="Email"
-        :rules="[required('Email must be provided')]"
+        label="Phone"
         outlined
         persistent-hint
-        hint="Must be a unique email"
-        class="span-2"
     />
 
     <v-text-field
+        :readonly="isEdit"
+        v-model="user.email"
+        :rules="[required('Email must be provided')]"
+        class="span-2"
+        hint="Must be a unique email"
+        label="Email"
+        outlined
+        persistent-hint
+    />
+
+    <v-text-field
+        :readonly="isEdit"
         v-model="user.password"
-        label="Password"
         :type="showPassword ? 'text' : 'password'"
         dense
+        label="Password"
         outlined
     />
 
     <v-text-field
+        :readonly="isEdit"
         v-model="confirmPassword"
-        label="Confirm Password"
         :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
         :type="showPassword ? 'text' : 'password'"
         dense
+        label="Confirm Password"
         outlined
     />
 
     <v-checkbox
+        v-if="auth_user.email === user.email"
         v-model="showPassword"
         label="Show Password"
         style="margin-top: -15px"
@@ -77,6 +83,9 @@ import {UsersService} from '@/services/users-service';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
+import {createUserWithEmailAndPassword} from "firebase/auth";
+import {auth} from '@/firebase_config'
+import { getUser } from '@/utils/local';
 
 export default {
   name: 'Form',
@@ -90,6 +99,7 @@ export default {
     showPassword: false,
     users_service: new UsersService(),
     confirmPassword: '',
+    auth_user: '',
     user: {
       image: '',
       name: '',
@@ -102,6 +112,7 @@ export default {
 
   mounted() {
     this.loadUser();
+    this.auth_user = getUser() ? getUser() : null;
   },
 
   methods: {
@@ -139,20 +150,27 @@ export default {
       } else {
         context.changeLoadingMessage('Creating A New User');
         try {
-          if(this.user.password !== this.confirmPassword) {
+          if (this.user.password !== this.confirmPassword) {
             context.reportError({
               'title': "Password doesn't match",
             })
             return true;
           }
 
-          let _id = this.getRandomId();
-          // image uploads
+          await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
+              .then((userCredential) => {
+                // Signed in
+                this.auth_user = userCredential.user;
+              })
+              .catch((error) => {
+                console.log(error)
+              });
+
           if (this.image) {
-            await this.uploadImageToFirebase(storage, this.image, _id);
+            await this.uploadImageToFirebase(storage, this.image, this.auth_user.uid);
           }
 
-          await this.users_service.create(this.user, _id);
+          await this.users_service.create(this.user, this.auth_user.uid);
           return true
         } catch (e) {
           context.reportError({
@@ -200,7 +218,7 @@ export default {
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
-      const storageRef = ref(storage, _id+'_'+_file.name);
+      const storageRef = ref(storage, _id + '_' + _file.name);
 
       await uploadBytes(storageRef, _file).then(async (snapshot) => {
         console.log(snapshot, 'snapshot')
@@ -208,7 +226,7 @@ export default {
         await getDownloadURL(storageRef)
             .then((url) => {
               console.log(url, 'url')
-              this.student.image = url;
+              this.user.image = url;
             })
             .catch((error) => {
               console.log(error, 'error')
@@ -240,7 +258,7 @@ p {
 
 .icon {
   position: absolute;
-  color:red;
+  color: red;
   top: 0;
   right: 5px;
 }
@@ -313,7 +331,7 @@ input[type="file"] {
   width: 200px;
 }
 
-.cursor-pointer{
+.cursor-pointer {
   cursor: pointer;
 }
 
