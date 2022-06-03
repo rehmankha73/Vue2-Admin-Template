@@ -26,7 +26,6 @@
             max-width="250"
         ></v-img>
       </v-avatar>
-
     </template>
 
     <!--    <template #scopes="{ item }">-->
@@ -114,13 +113,15 @@ export default {
     },
     async loadData() {
       let _data = await this.students_service.fetchAll();
+
       let roll_no_array = []
       _data.forEach(s => roll_no_array.push((s.roll_no)));
-      this.new_roll_no = parseInt(Math.max(...roll_no_array)) + 1;
+      this.new_roll_no = _data.length > 0 ? parseInt(Math.max(...roll_no_array)) + 1 : 1;
 
       _data.sort(function (x, y) {
         return parseInt(x.roll_no) - parseInt(y.roll_no);
       });
+
       return _data
     }
   }

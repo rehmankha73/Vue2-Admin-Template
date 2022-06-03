@@ -84,6 +84,7 @@ export default {
       await this.classes_service.delete(item)
     },
     async loadData() {
+      console.log(await this.classes_service.fetchAll(), 'data')
       return await this.classes_service.fetchAll()
     }
   }

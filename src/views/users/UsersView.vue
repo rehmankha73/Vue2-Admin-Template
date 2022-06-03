@@ -1,7 +1,4 @@
 <template>
-  <!--  :allow-add="getUser() ? getUser().scopes.includes('users:new') : false"-->
-  <!--  :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  service.delete : null : null"-->
-  <!--  :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"-->
   <data-table
       :allow-add="true"
       :delete-handler="deleteService"
@@ -13,6 +10,16 @@
       @done="$router.back()"
       @add-new="addNew"
   >
+    <template #image="{ item }">
+      <v-avatar>
+        <v-img
+            :src="item.image"
+            max-height="150"
+            max-width="250"
+        ></v-img>
+      </v-avatar>
+    </template>
+
     <template #createdAt="{ item }">
       {{ formatDate(item.createdAt) }}
     </template>
@@ -32,20 +39,17 @@ import {getUser} from '@/utils/local';
 export default {
   components: {DataTable},
 
-  mounted() {
-  },
-
   data: () => ({
     items: [],
     loading: false,
-    service: new UsersService(),
+    user_service: new UsersService(),
 
     headers: [
       {
-        text: 'ID',
-        value: 'id',
+        text: 'Image',
+        value: 'image',
         sortable: true,
-        width: 150,
+        width: 200
       },
       {
         text: 'Name',
@@ -56,6 +60,12 @@ export default {
       {
         text: 'Email',
         value: 'email',
+        sortable: true,
+        width: 200
+      },
+      {
+        text: 'Phone',
+        value: 'phone',
         sortable: true,
         width: 200
       },
@@ -80,13 +90,14 @@ export default {
       this.$router.push(`/user?id=${item.id}`);
     },
     async deleteService(item) {
-      await this.service.delete(item)
+      await this.user_service.delete(item)
     },
     async showService(item) {
-      await this.service.fetchOne(item)
+      await this.user_service.fetchOne(item)
     },
+
     async loadData() {
-      return this.service.fetchAll();
+      return this.user_service.fetchAll();
     }
   }
 };
