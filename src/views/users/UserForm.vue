@@ -2,41 +2,69 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
+    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
+      <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
+      <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
+        + Select/Drop Image
+      </div>
+
+      <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
+        <img :src="user.image" alt="" class="img"/>
+        <button class="icon" @click="removeFile">X</button>
+      </div>
+    </div>
+
     <v-text-field
         v-model="user.name"
-        :rules="[required('A name must be provided')]"
+        label="Display Name"
+        :rules="[required('A display name must be provided')]"
         persistent-hint
-        hint="Must be a authentic Name"
-        class="span-2"
-        label="Name"
+        hint="Must be a valid username"
         outlined
+        class="span-2"
     />
+
+    <v-text-field
+        v-model="user.phone"
+        label="Phone"
+        :rules="[required('Phone must be provided')]"
+        outlined
+        persistent-hint
+        hint="Must be a valid phone #"
+        class="span-2"
+    />
+
     <v-text-field
         v-model="user.email"
-        :rules="[required('A email must be provided')]"
-        persistent-hint
-        hint="Must be a authentic and unique email/"
-        class="span-2"
         label="Email"
-        outlined
-    />
-    <v-text-field
-        v-model="user.address"
-        :rules="[required('Address must be provided')]"
-        class="span-2"
-        hint="Must be a authentic address"
-        label="Address"
+        :rules="[required('Email must be provided')]"
         outlined
         persistent-hint
-    />
-    <v-text-field
-        v-model="user.website"
+        hint="Must be a unique email"
         class="span-2"
-        type="url"
-        label="Website"
-        persistent-hint
-        hint="Must be a valid website url"
+    />
+
+    <v-text-field
+        v-model="user.password"
+        label="Password"
+        :type="showPassword ? 'text' : 'password'"
+        dense
         outlined
+    />
+
+    <v-text-field
+        v-model="confirmPassword"
+        label="Confirm Password"
+        :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
+        :type="showPassword ? 'text' : 'password'"
+        dense
+        outlined
+    />
+
+    <v-checkbox
+        v-model="showPassword"
+        label="Show Password"
+        style="margin-top: -15px"
     />
 
     <loading-dialog v-model="loading" message="Fetching User Data"/>
@@ -48,214 +76,28 @@ import SimpleForm from '../../components/Form';
 import {UsersService} from '@/services/users-service';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
+import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 
 export default {
   name: 'Form',
   components: {LoadingDialog, SimpleForm},
 
   data: () => ({
+    image: null,
+    old_image_url: null,
     isEdit: false,
     loading: false,
     showPassword: false,
-    service: new UsersService(),
+    users_service: new UsersService(),
     confirmPassword: '',
     user: {
+      image: '',
       name: '',
       email: '',
-      address: '',
-      website: '',
+      phone: '',
+      password: '',
     },
 
-    items: [
-      {
-        id: 'events',
-        name: 'Events',
-        children: [
-          {id: 'events:new', name: 'Create Events'},
-          {id: 'events:view', name: 'View Events'},
-          {id: 'events:edit', name: 'Edit Events'},
-          {id: 'events:delete', name: 'Delete Events'}
-        ]
-      },
-      {
-        id: 'notifications',
-        name: 'Notifications',
-        children: [
-          {id: 'notifications:new', name: 'Create Notifications'},
-          {id: 'notifications:view', name: 'View Notifications'},
-          {id: 'notifications:edit', name: 'Edit Notifications'},
-          {id: 'notifications:delete', name: 'Delete Notifications'}
-        ]
-      },
-      {
-        id: 'popups',
-        name: 'Popups',
-        children: [
-          {id: 'popups:new', name: 'Create Popups'},
-          {id: 'popups:view', name: 'View Popups'},
-          {id: 'popups:edit', name: 'Edit Popups'},
-          {id: 'popups:delete', name: 'Delete Popups'}
-        ]
-      },
-      {
-        id: 'banners',
-        name: 'Banners',
-        children: [
-          {id: 'banners:new', name: 'Create Banners'},
-          {id: 'banners:view', name: 'View Banners'},
-          {id: 'banners:delete', name: 'Delete Banners'}
-        ]
-      },
-      {
-        id: 'iaps',
-        name: 'In App Purchases',
-        children: [
-          {id: 'iaps:view', name: 'View In App Purchases'},
-          {id: 'iaps:edit', name: 'Edit In App Purchases'},
-          {id: 'iaps-offers:view', name: 'View In App Purchases Offers'},
-          {id: 'iaps-offers:new', name: 'Create In App Purchases Offers'},
-          {id: 'iaps-offers:edit', name: 'Edit In App Purchases Offers'},
-          {id: 'iaps-offers:delete', name: 'Delete In App Purchases Offers'},
-        ]
-      },
-      {
-        id: 'institutions',
-        name: 'Institutions',
-        children: [
-          {id: 'institutions:new', name: 'Create Institutions'},
-          {id: 'institutions:view', name: 'View Institutions'},
-          {id: 'institutions:edit', name: 'Edit Institutions'},
-          {id: 'institutions:delete', name: 'Delete Institutions'}
-        ]
-      },
-      {
-        id: 'questions',
-        name: 'Questions',
-        children: [
-          {id: 'questions:new', name: 'Create Questions'},
-          {id: 'questions:view', name: 'View Questions'},
-          {id: 'questions:edit', name: 'Edit Questions'},
-          {id: 'questions:delete', name: 'Delete Questions'}
-        ]
-      },
-      {
-        id: 'comments',
-        name: 'Comments',
-        children: [
-          {id: 'comments:view', name: 'View Comments'},
-          {id: 'comments:edit', name: 'Edit Comments'},
-          {id: 'comments:delete', name: 'Delete Comments'}
-        ]
-      },
-      {
-        id: 'user-contributions',
-        name: 'User Contributions',
-        children: [
-          {id: 'user-contributions:view', name: 'View User Contributions'},
-          {id: 'user-contributions:edit', name: 'Edit, Approve and Reject User Contributions'},
-        ]
-      },
-      {
-        id: 'question-media',
-        name: 'Question Media',
-        children: [
-          {id: 'question-media:view', name: 'View Question Media'},
-          {id: 'question-media:new', name: 'Create Question Media'},
-          {id: 'question-media:edit', name: 'Edit Question Media'},
-        ]
-      },
-      {
-        id: 'flagged-questions',
-        name: 'Flagged Questions',
-        children: [
-          {id: 'flagged-questions:view', name: 'View Flagged Questions'},
-          {id: 'flagged-questions:edit', name: 'Edit Flagged Questions'},
-          {id: 'flagged-questions:delete', name: 'Delete Flagged Questions'}
-        ]
-      },
-      {
-        id: 'passage-questions',
-        name: 'Passage Questions',
-        children: [
-          {id: 'passage-questions:view', name: 'View Passage Questions'},
-          {id: 'passage-questions:new', name: 'Create Passage Questions'},
-          {id: 'passage-questions:edit', name: 'Edit Passage Questions'},
-          {id: 'passage-questions:delete', name: 'Delete Passage Questions'}
-        ]
-      },
-      {
-        id: 'categories',
-        name: 'Categories',
-        children: [
-          {id: 'categories:new', name: 'Create  Categories'},
-          {id: 'categories:view', name: 'View  Categories'},
-          {id: 'categories:edit', name: 'Edit  Categories'},
-          {id: 'categories:delete', name: 'Delete  Categories'}
-        ]
-      },
-      {
-        id: 'sub-categories',
-        name: 'Sub-Categories',
-        children: [
-          {id: 'sub-categories:new', name: 'Create Sub-Categories'},
-          {id: 'sub-categories:view', name: 'View Sub-Categories'},
-          {id: 'sub-categories:edit', name: 'Edit Sub-Categories'},
-          {id: 'sub-categories:delete', name: 'Delete Sub-Categories'}
-        ]
-      },
-      {
-        id: 'decks',
-        name: 'Decks',
-        children: [
-          {id: 'decks:new', name: 'Create  Decks'},
-          {id: 'decks:view', name: 'View  Decks'},
-          {id: 'decks:edit', name: 'Edit  Decks'},
-          {id: 'decks:delete', name: 'Delete  Decks'}
-        ]
-      },
-      {
-        id: 'flashcards',
-        name: 'Flashcards',
-        children: [
-          {id: 'flashcards:new', name: 'Create Flashcards'},
-          {id: 'flashcards:view', name: 'View Flashcards'},
-          {id: 'flashcards:edit', name: 'Edit Flashcards'},
-          {id: 'flashcards:delete', name: 'Delete Flashcards'}
-        ]
-      },
-      {
-        id: 'users',
-        name: 'Users',
-        children: [
-          {id: 'users:new', name: 'Create  Users'},
-          {id: 'users:view', name: 'View  Users'},
-          {id: 'users:edit', name: 'Edit  Users'},
-          {id: 'users:delete', name: 'Delete  Users'}
-        ]
-      },
-      {
-        id: 'account-deletion',
-        name: 'Account Deletion Requests',
-        children: [
-          {id: 'account-deletion:view', name: 'View Account Deletion Requests'},
-        ]
-      },
-      {
-        id: 'reviews',
-        name: 'Reviews',
-        children: [
-          {id: 'reviews:view', name: 'View  Reviews'},
-        ]
-      },
-      {
-        id: 'customers',
-        name: 'Customers',
-        children: [
-          {id: 'customers:view', name: 'View Customers'},
-          {id: 'customers:export', name: 'Export Customers'},
-        ]
-      },
-    ]
   }),
 
   mounted() {
@@ -268,15 +110,23 @@ export default {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
-      this.user = await this.service.fetchOne(this.$route.query.id);
-      // this.confirmPassword = this.user.password
+      this.user = await this.users_service.fetchOne(this.$route.query.id);
+      this.confirmPassword = this.user.password
       this.loading = false;
     },
+
     async submit(context) {
+      const storage = getStorage();
+
       if (this.isEdit) {
         context.changeLoadingMessage('Updating User');
         try {
-          await this.service.update(this.user);
+          if (this.image) {
+            await this.deleteImageFromFirebase(storage, this.old_image_url);
+            await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
+          }
+
+          await this.users_service.update(this.user, this.$route.query.id);
           return true
         } catch (e) {
           context.reportError({
@@ -289,7 +139,20 @@ export default {
       } else {
         context.changeLoadingMessage('Creating A New User');
         try {
-          await this.service.create(this.user);
+          if(this.user.password !== this.confirmPassword) {
+            context.reportError({
+              'title': "Password doesn't match",
+            })
+            return true;
+          }
+
+          let _id = this.getRandomId();
+          // image uploads
+          if (this.image) {
+            await this.uploadImageToFirebase(storage, this.image, _id);
+          }
+
+          await this.users_service.create(this.user, _id);
           return true
         } catch (e) {
           context.reportError({
@@ -300,7 +163,71 @@ export default {
           return false
         }
       }
-    }
+    },
+
+    getRandomId() {
+      return Math.random().toString(36).substr(2, 9);
+    },
+
+    // for image storage control
+    onDrop: function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      let files = e.dataTransfer.files;
+      this.createFile(files[0]);
+    },
+
+    onChange(e) {
+      let files = e.target.files;
+      this.createFile(files[0]);
+    },
+
+    createFile(file) {
+      let reader = new FileReader();
+      this.image = file;
+      let vm = this;
+
+      reader.readAsDataURL(file);
+
+      reader.onload = function (e) {
+        vm.user.image = e.target.result;
+      }
+      console.log(this.user)
+    },
+
+    removeFile() {
+      this.image = '';
+    },
+
+    async uploadImageToFirebase(storage, _file, _id) {
+      const storageRef = ref(storage, _id+'_'+_file.name);
+
+      await uploadBytes(storageRef, _file).then(async (snapshot) => {
+        console.log(snapshot, 'snapshot')
+
+        await getDownloadURL(storageRef)
+            .then((url) => {
+              console.log(url, 'url')
+              this.student.image = url;
+            })
+            .catch((error) => {
+              console.log(error, 'error')
+            });
+
+      }).catch(e => {
+        console.log(e)
+      });
+    },
+
+    async deleteImageFromFirebase(storage, file_url) {
+      const desertRef = ref(storage, file_url);
+
+      deleteObject(desertRef).then(() => {
+        // File deleted successfully
+      }).catch((error) => {
+        console.log(error, 'error')
+      });
+    },
   }
 };
 </script>
@@ -310,4 +237,85 @@ p {
   font-weight: bold;
   text-align: left;
 }
+
+.icon {
+  position: absolute;
+  color:red;
+  top: 0;
+  right: 5px;
+}
+
+html, body {
+  height: 100%;
+  text-align: center;
+}
+
+.btn {
+  background-color: #d3394c;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: bold;
+  padding: 15px 35px;
+  position: relative;
+}
+
+.btn:hover {
+  background-color: #722040;
+}
+
+input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+.align-center {
+  text-align: center;
+}
+
+.helper {
+  height: 100%;
+  display: inline-block;
+  vertical-align: middle;
+  width: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.hidden.image {
+  display: inline-block !important;
+}
+
+.display-inline {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.img {
+  border: 1px solid #f6f6f6;
+  display: inline-block;
+  height: 200px;
+  width: 200px;
+  margin-left: -2px;
+  margin-top: -2px;
+  object-fit: contain;
+}
+
+.drop {
+  background-color: #f2f2f2;
+  border: 2px dashed #ccc;
+  border-radius: 2px;
+  height: 200px;
+  width: 200px;
+}
+
+.cursor-pointer{
+  cursor: pointer;
+}
+
 </style>
+
