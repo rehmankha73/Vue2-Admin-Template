@@ -82,7 +82,7 @@ export default {
                 localStorage.setItem('auth_token', user.accessToken)
                 localStorage.setItem('fb_auth_user', JSON.stringify(user))
                 localStorage.setItem('auth_user', JSON.stringify(this.db_user))
-                this.$router.push('/')
+                await this.$router.push('/')
               })
               .catch((error) => {
                 const errorCode = error.code;

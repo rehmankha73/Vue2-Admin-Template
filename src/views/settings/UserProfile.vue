@@ -1,77 +1,129 @@
 <template>
-  <SimpleForm :onSubmit="submit">
+  <v-card class="span-2">
+    <v-toolbar
+        color="light blue"
+        dark
+        flat
+    >
+      <v-toolbar-title>User Profile Settings</v-toolbar-title>
+    </v-toolbar>
+    <v-tabs
+        color="blue"
+        vertical
+    >
+      <v-tab>
+        <v-icon left>
+          mdi-account
+        </v-icon>
+        Profile Options
+      </v-tab>
+      <v-tab>
+        <v-icon left>
+          mdi-lock
+        </v-icon>
+        Change Password
+      </v-tab>
 
-    <p class="span-2 form__title">Update User Profile</p>
+      <v-tab-item>
+        <v-card flat>
+          <v-card-text>
+            <SimpleForm :onSubmit="updateProfile" @done="reloadData">
+              <p class="span-2 form__title">Update User Profile</p>
 
-    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-      <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
-      <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
-           @click="$refs['file-input'].click();">
-        + Select/Drop Image
-      </div>
+              <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
+                <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
+                <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
+                     @click="$refs['file-input'].click();">
+                  + Select/Drop Image
+                </div>
 
-      <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
-        <img :src="user.image" alt="" class="img"/>
-        <button class="icon" @click.stop="removeFile">X</button>
-      </div>
-    </div>
+                <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
+                  <img :src="user.image" alt="" class="img"/>
+                  <button class="icon" @click.stop="removeFile">X</button>
+                </div>
+              </div>
 
-    <v-text-field
-        v-model="user.name"
-        :rules="[required('A display name must be provided')]"
-        class="span-2"
-        hint="Must be a valid username"
-        label="Display Name"
-        outlined
-        persistent-hint
-    />
+              <v-text-field
+                  v-model="user.name"
+                  :rules="[required('A display name must be provided')]"
+                  class="span-2"
+                  hint="Must be a valid username"
+                  label="Display Name"
+                  outlined
+                  persistent-hint
+              />
 
-    <v-text-field
-        v-model="user.phone"
-        :rules="[required('Phone must be provided')]"
-        class="span-2"
-        hint="Must be a valid phone #"
-        label="Phone"
-        outlined
-        persistent-hint
-    />
+              <v-text-field
+                  v-model="user.phone"
+                  :rules="[required('Phone must be provided')]"
+                  class="span-2"
+                  hint="Must be a valid phone #"
+                  label="Phone"
+                  outlined
+                  persistent-hint
+              />
 
-    <v-text-field
-        readonly
-        v-model="user.email"
-        :rules="[required('Email must be provided')]"
-        class="span-2"
-        hint="Must be a unique email"
-        label="Email"
-        outlined
-        persistent-hint
-    />
+              <v-text-field
+                  v-model="user.email"
+                  :rules="[required('Email must be provided')]"
+                  class="span-2"
+                  hint="Must be a unique email"
+                  label="Email"
+                  outlined
+                  persistent-hint
+                  readonly
+              />
 
-    <v-text-field
-        v-model="user.password"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        label="Password"
-        outlined
-    />
+              <loading-dialog v-model="loading" message="Fetching User Profile Data"/>
+            </SimpleForm>
+          </v-card-text>
+        </v-card>
+      </v-tab-item>
 
-    <v-text-field
-        v-model="confirmPassword"
-        :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        label="Confirm Password"
-        outlined
-    />
+      <v-tab-item>
+        <v-card flat>
+          <v-card-text>
+            <SimpleForm :onSubmit="updatePassword" @done="reloadData">
+              <p class="span-2 form__title">Update User Password</p>
 
-    <v-checkbox
-        v-model="showPassword"
-        label="Show Password"
-        style="margin-top: -15px"
-    />
+              <v-text-field
+                  class="span-2"
+                  v-model="oldPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  label="Old Password"
+                  outlined
+              />
 
-    <loading-dialog v-model="loading" message="Fetching User Profile Data"/>
-  </SimpleForm>
+              <v-text-field
+                  class="span-2"
+                  v-model="user.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  label="New Password"
+                  outlined
+              />
+
+              <v-text-field
+                  class="span-2"
+                  v-model="confirmPassword"
+                  :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
+                  :type="showPassword ? 'text' : 'password'"
+                  label="Confirm Password"
+                  outlined
+              />
+
+              <v-checkbox
+                  v-model="showPassword"
+                  label="Show Password"
+                  style="margin-top: -15px"
+              />
+
+              <loading-dialog v-model="loading" message="Loading..."/>
+            </SimpleForm>
+          </v-card-text>
+        </v-card>
+      </v-tab-item>
+    </v-tabs>
+  </v-card>
 </template>
 
 <script>
@@ -79,8 +131,8 @@ import SimpleForm from '../../components/Form';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
-import { auth } from '@/firebase_config';
-import { updatePassword } from "firebase/auth";
+import {auth} from '@/firebase_config';
+import {updatePassword} from "firebase/auth";
 import {getUser} from '@/utils/local';
 import {UsersService} from "@/services/users-service";
 
@@ -95,6 +147,7 @@ export default {
     loading: false,
     showPassword: false,
     confirmPassword: '',
+    oldPassword: '',
     auth_user: '',
     new_created_user: '',
     user: {
@@ -107,73 +160,90 @@ export default {
   }),
 
   mounted() {
-    this.auth_user = getUser() ? getUser(): null;
     this.loadUser();
   },
 
   methods: {
     required,
-    async loadUser() {
+    loadUser() {
+      console.log('load User')
       this.loading = true;
+      console.log(getUser())
       this.user = getUser();
-      this.confirmPassword = this.user.password
+      console.log(this.user, 'user')
+      this.old_image_url = this.user.image;
+      this.user.password = '';
       this.loading = false;
     },
 
-    async submit(context) {
+    async updateProfile(context) {
       const storage = getStorage();
 
-      context.changeLoadingMessage('Updating Logged in User');
+      context.changeLoadingMessage('Updating User Profile');
       try {
-        if (this.user.password !== this.confirmPassword) {
-          context.reportError({
-            'title': "Password doesn't match",
-          })
-          return true;
-        }
-
-        if (!confirm('Are you sure to update this, you will be log out!')) {
-          return;
-        }
-
-        console.log(auth.currentUser,'auth user')
-        // try{
-        //
-        // }catch(e) {
-        //   console.log(e)
-        //   alert("error")
-        // }
-        await updatePassword(auth.currentUser, this.user.password).then(() => {
-          console.log('profile password update successful.');
-        }).catch((error) => {
-          console.log(error,'an error occurred while updating profile password');
-          alert(error.message);
-        });
 
         if (this.image) {
+          await this.deleteImageFromFirebase(storage, this.old_image_url);
           await this.uploadImageToFirebase(storage, this.image, auth.currentUser.uid);
         }
 
         await this.users_service.update(this.user, auth.currentUser.uid);
 
-        this.logout();
-
         return true
       } catch (e) {
         context.reportError({
           'title': 'Error while creating User',
+          'description': e.message,
         })
 
         return false
       }
     },
 
-    logout() {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('auth_user')
-      localStorage.removeItem('fb_auth_user')
+    async updatePassword(context) {
+      context.changeLoadingMessage('Updating User Profile');
+      try {
+        let _local_user = getUser();
+        if(this.oldPassword !== _local_user.password) {
+          context.reportError({
+            'title': "Old password doesn't match, Please double check it",
+            'description': "Old password doesn't match, Please double check it",
+          })
 
-      this.$router.push('/auth/sign-in')
+          return ;
+        }
+
+          // Updating password in firebase
+          try {
+            await updatePassword(auth.currentUser, this.user.password);
+            console.log('firebase auth password changed...');
+            await this.$router.push('/')
+          } catch (error) {
+            console.log(error, error.message)
+            context.reportError({
+              'title': 'Something went wrong while updating user!',
+              'description': error.message,
+            })
+          }
+
+        await this.users_service.update(this.user, auth.currentUser.uid);
+
+        return true
+      } catch (e) {
+        context.reportError({
+          'title': 'Error while creating User',
+          'description': e.message,
+        })
+
+        return false
+      }
+    },
+
+    async reloadData() {
+      localStorage.removeItem('auth_user');
+      localStorage.setItem('auth_user', JSON.stringify(await this.users_service.fetchOne(auth.currentUser.uid)));
+
+      await this.loadUser()
     },
 
     // for image storage control

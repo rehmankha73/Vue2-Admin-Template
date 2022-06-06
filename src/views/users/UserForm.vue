@@ -122,6 +122,7 @@ export default {
       this.isEdit = true;
       this.loading = true;
       this.user = await this.users_service.fetchOne(this.$route.query.id);
+      this.old_image_url = this.user.image;
       this.confirmPassword = this.user.password
       this.loading = false;
     },

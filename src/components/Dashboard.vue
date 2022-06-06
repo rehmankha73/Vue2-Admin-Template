@@ -95,10 +95,13 @@ export default {
           icon: 'mdi-account-tie',
           isVisible: true
         },
+        {
+
+        },
         {isDivider: true},
         {
           to: '/user-profile',
-          title: 'Profile settings',
+          title: 'Profile Settings',
           icon: 'mdi-account-cog',
           isVisible: true
         },
