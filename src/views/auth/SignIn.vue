@@ -76,12 +76,11 @@ export default {
               .then(async (userCredential) => {
                 // Signed in
                 const user = userCredential.user;
-                console.log(user, 'user');
 
                 this.db_user = await this.users_service.fetchOne(user.uid);
-                console.log(this.db_user, 'db_user')
 
                 localStorage.setItem('auth_token', user.accessToken)
+                localStorage.setItem('fb_auth_user', JSON.stringify(user))
                 localStorage.setItem('auth_user', JSON.stringify(this.db_user))
                 this.$router.push('/')
               })

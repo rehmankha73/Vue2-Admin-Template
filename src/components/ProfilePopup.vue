@@ -39,7 +39,6 @@ export default {
     const token = localStorage.getItem('auth_token');
     if (token) {
       this.user = JSON.parse(localStorage.getItem('auth_user'));
-      console.log(this.user)
     }
   },
 
@@ -54,6 +53,7 @@ export default {
     logout() {
       localStorage.removeItem('auth_token')
       localStorage.removeItem('auth_user')
+      localStorage.removeItem('fb_auth_user')
 
       this.$router.push('/auth/sign-in')
     }

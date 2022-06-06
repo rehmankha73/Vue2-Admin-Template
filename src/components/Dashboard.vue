@@ -98,7 +98,7 @@ export default {
         {isDivider: true},
         {
           to: '/user-profile',
-          title: 'Profile Settings',
+          title: 'Profile settings',
           icon: 'mdi-account-cog',
           isVisible: true
         },

@@ -4,6 +4,7 @@ import SignInView from './views/auth/SignIn';
 import NotFound from './views/404.vue';
 import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
+import UserProfile from "@/views/settings/UserProfile";
 
 import {usersRouter} from './views/users/router';
 import {classesRouter} from "@/views/classes/router";
@@ -21,6 +22,11 @@ const routes = [
             {
                 path: '/',
                 component: Home
+            },
+            {
+                path: 'user-profile',
+                name: 'UserProfile',
+                component: UserProfile,
             },
             ...usersRouter,
             ...studentsRouter,
@@ -52,7 +58,6 @@ router.beforeEach((to, __, next) => {
             next('/auth/sign-in');
         }
     }
-
     next();
 });
 

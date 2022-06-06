@@ -69,7 +69,7 @@ export default {
         this.changeLoadingStatus(true);
         if (await this.onSubmit(this.submitContext)) {
           this.changeLoadingStatus(false);
-          this.$refs.form.reset();
+          // this.$refs.form.reset();
           this.$emit('done');
         } else {
           this.changeLoadingStatus(false);

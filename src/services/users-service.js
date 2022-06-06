@@ -20,9 +20,6 @@ export class UsersService {
     }
 
     async create(user,_id) {
-        // return (await axios.post('/users', user)).data;
-        // return (await axios.post('/companies', user)).data.data;
-
         await setDoc(doc(db, "users", _id), user);
     }
 

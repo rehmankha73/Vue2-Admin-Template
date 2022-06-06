@@ -1,7 +1,7 @@
 <template>
-  <SimpleForm :onSubmit="submit" @done="$router.back()">
+  <SimpleForm :onSubmit="submit">
 
-    <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
+    <p class="span-2 form__title">Update User Profile</p>
 
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
       <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
@@ -12,7 +12,7 @@
 
       <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
         <img :src="user.image" alt="" class="img"/>
-        <button class="icon" @click="removeFile">X</button>
+        <button class="icon" @click.stop="removeFile">X</button>
       </div>
     </div>
 
@@ -37,7 +37,7 @@
     />
 
     <v-text-field
-        :readonly="isEdit"
+        readonly
         v-model="user.email"
         :rules="[required('Email must be provided')]"
         class="span-2"
@@ -48,7 +48,6 @@
     />
 
     <v-text-field
-        :readonly="isEdit"
         v-model="user.password"
         :type="showPassword ? 'text' : 'password'"
         dense
@@ -57,7 +56,6 @@
     />
 
     <v-text-field
-        :readonly="isEdit"
         v-model="confirmPassword"
         :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
         :type="showPassword ? 'text' : 'password'"
@@ -67,39 +65,38 @@
     />
 
     <v-checkbox
-        v-if="!isEdit || auth_user.email === user.email"
         v-model="showPassword"
         label="Show Password"
         style="margin-top: -15px"
     />
 
-    <loading-dialog v-model="loading" message="Fetching User Data"/>
+    <loading-dialog v-model="loading" message="Fetching User Profile Data"/>
   </SimpleForm>
 </template>
 
 <script>
 import SimpleForm from '../../components/Form';
-import {UsersService} from '@/services/users-service';
 import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
-import {createUserWithEmailAndPassword} from "firebase/auth";
-import {auth} from '@/firebase_config'
-import { getUser } from '@/utils/local';
+import { auth } from '@/firebase_config';
+import { updatePassword } from "firebase/auth";
+import {getUser} from '@/utils/local';
+import {UsersService} from "@/services/users-service";
 
 export default {
   name: 'Form',
   components: {LoadingDialog, SimpleForm},
 
   data: () => ({
+    users_service: new UsersService(),
     image: null,
     old_image_url: null,
-    isEdit: false,
     loading: false,
     showPassword: false,
-    users_service: new UsersService(),
     confirmPassword: '',
     auth_user: '',
+    new_created_user: '',
     user: {
       image: '',
       name: '',
@@ -107,21 +104,18 @@ export default {
       phone: '',
       password: '',
     },
-
   }),
 
   mounted() {
+    this.auth_user = getUser() ? getUser(): null;
     this.loadUser();
-    this.auth_user = getUser() ? getUser() : null;
   },
 
   methods: {
     required,
     async loadUser() {
-      if (!this.$route.query.id) return;
-      this.isEdit = true;
       this.loading = true;
-      this.user = await this.users_service.fetchOne(this.$route.query.id);
+      this.user = getUser();
       this.confirmPassword = this.user.password
       this.loading = false;
     },
@@ -129,62 +123,57 @@ export default {
     async submit(context) {
       const storage = getStorage();
 
-      if (this.isEdit) {
-        context.changeLoadingMessage('Updating User');
-        try {
-          if (this.image) {
-            await this.deleteImageFromFirebase(storage, this.old_image_url);
-            await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
-          }
-
-          await this.users_service.update(this.user, this.$route.query.id);
-          return true
-        } catch (e) {
+      context.changeLoadingMessage('Updating Logged in User');
+      try {
+        if (this.user.password !== this.confirmPassword) {
           context.reportError({
-            'title': 'Error while creating User',
-            'description': e.response
+            'title': "Password doesn't match",
           })
-
-          return false
+          return true;
         }
-      } else {
-        context.changeLoadingMessage('Creating A New User');
-        try {
-          if (this.user.password !== this.confirmPassword) {
-            context.reportError({
-              'title': "Password doesn't match",
-            })
-            return true;
-          }
 
-          await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
-              .then((userCredential) => {
-                // Signed in
-                this.auth_user = userCredential.user;
-              })
-              .catch((error) => {
-                console.log(error)
-              });
-
-          if (this.image) {
-            await this.uploadImageToFirebase(storage, this.image, this.auth_user.uid);
-          }
-
-          await this.users_service.create(this.user, this.auth_user.uid);
-          return true
-        } catch (e) {
-          context.reportError({
-            'title': 'Error while creating User',
-            'description': e.message
-          })
-
-          return false
+        if (!confirm('Are you sure to update this, you will be log out!')) {
+          return;
         }
+
+        console.log(auth.currentUser,'auth user')
+        // try{
+        //
+        // }catch(e) {
+        //   console.log(e)
+        //   alert("error")
+        // }
+        await updatePassword(auth.currentUser, this.user.password).then(() => {
+          console.log('profile password update successful.');
+        }).catch((error) => {
+          console.log(error,'an error occurred while updating profile password');
+          alert(error.message);
+        });
+
+        if (this.image) {
+          await this.uploadImageToFirebase(storage, this.image, auth.currentUser.uid);
+        }
+
+        await this.users_service.update(this.user, auth.currentUser.uid);
+
+        this.logout();
+
+        return true
+      } catch (e) {
+        context.reportError({
+          'title': 'Error while creating User',
+        })
+
+        return false
       }
     },
 
-    getRandomId() {
-      return Math.random().toString(36).substr(2, 9);
+    logout() {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      localStorage.removeItem('fb_auth_user')
+
+      this.$router.push('/auth/sign-in')
     },
 
     // for image storage control
@@ -214,7 +203,7 @@ export default {
     },
 
     removeFile() {
-      this.image = '';
+      this.user.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
