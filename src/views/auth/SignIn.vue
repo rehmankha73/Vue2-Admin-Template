@@ -25,7 +25,12 @@
             outlined
         />
 
+        <router-link to="/auth/sign-up" style=" text-decoration: none">
+          If you dont have account, please sign up free!
+        </router-link>
+
         <v-btn
+            class="mt-4"
             @click="signIn"
             color="primary"
             dark

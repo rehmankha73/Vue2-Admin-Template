@@ -3,6 +3,7 @@
 
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
+    <!--TODO:Have to make component on global level-->
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
       <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
       <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
@@ -47,6 +48,33 @@
         persistent-hint
     />
 
+    <v-text-field
+        v-if="!isEdit"
+        class="span-2"
+        :rules="[required('A strong password (minimum 8 characters) is required!')]"
+        v-model="user.password"
+        :type="showPassword ? 'text' : 'password'"
+        label="New Password"
+        outlined
+    />
+
+    <v-text-field
+        v-if="!isEdit"
+        class="span-2"
+        v-model="confirmPassword"
+        :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
+        :type="showPassword ? 'text' : 'password'"
+        label="Confirm Password"
+        outlined
+    />
+
+    <v-checkbox
+        v-if="!isEdit"
+        v-model="showPassword"
+        label="Show Password"
+        style="margin-top: -15px"
+    />
+
     <loading-dialog v-model="loading" message="Fetching User Data"/>
   </SimpleForm>
 </template>
@@ -72,6 +100,8 @@ export default {
     loading: false,
     users_service: new UsersService(),
     auth_user: '',
+    showPassword: false,
+    confirmPassword: '',
     user: {
       image: '',
       name: '',
@@ -104,6 +134,7 @@ export default {
       if (this.isEdit) {
         context.changeLoadingMessage('Updating User');
         try {
+
           if (this.image) {
             await this.deleteImageFromFirebase(storage, this.old_image_url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
@@ -129,14 +160,22 @@ export default {
             return true;
           }
 
-          await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
-              .then((userCredential) => {
-                // Signed in
-                this.auth_user = userCredential.user;
-              })
-              .catch((error) => {
-                console.log(error)
-              });
+          try{
+            await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
+                .then((userCredential) => {
+                  // Signed in
+                  this.auth_user = userCredential.user;
+                })
+                .catch((error) => {
+                  console.log(error)
+                });
+          } catch (e) {
+            context.reportError({
+              'title': "Something went wrong while creating new user, please try later!",
+              'description': e.message,
+            })
+          }
+
 
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, this.auth_user.uid);
@@ -308,4 +347,3 @@ input[type="file"] {
 }
 
 </style>
-

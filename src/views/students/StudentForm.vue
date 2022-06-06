@@ -2,6 +2,7 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
+    <!--TODO:Have to make component on global level-->
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
       <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
       <div v-if="!student.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
@@ -135,64 +136,8 @@ export default {
       return _data;
     },
 
-    onDrop: function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      let files = e.dataTransfer.files;
-      this.createFile(files[0]);
-    },
-    onChange(e) {
-      let files = e.target.files;
-      this.createFile(files[0]);
-    },
-    createFile(file) {
-      let reader = new FileReader();
-      this.image = file;
-      let vm = this;
-
-      reader.readAsDataURL(file);
-
-      reader.onload = function (e) {
-        vm.student.image = e.target.result;
-      }
-      console.log(this.student)
-    },
-    removeFile() {
-      this.student.image = '';
-    },
-
     async getClassesData() {
       this.class_data = await this.classes_service.fetchAll();
-    },
-
-    async uploadImageToFirebase(storage, _file, _id) {
-      const storageRef = ref(storage, _id+'_'+_file.name);
-
-      await uploadBytes(storageRef, _file).then(async (snapshot) => {
-        console.log(snapshot, 'snapshot')
-
-        await getDownloadURL(storageRef)
-            .then((url) => {
-              console.log(url, 'url')
-              this.student.image = url;
-            })
-            .catch((error) => {
-              console.log(error, 'error')
-            });
-
-      }).catch(e => {
-        console.log(e)
-      });
-    },
-
-    async deleteImageFromFirebase(storage, file_url) {
-      const desertRef = ref(storage, file_url);
-
-      deleteObject(desertRef).then(() => {
-        // File deleted successfully
-      }).catch((error) => {
-        console.log(error, 'error')
-      });
     },
 
     async loadStudent() {
@@ -247,6 +192,66 @@ export default {
           return false
         }
       }
+    },
+
+    // image upload code
+    onDrop: function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      let files = e.dataTransfer.files;
+      this.createFile(files[0]);
+    },
+
+    onChange(e) {
+      let files = e.target.files;
+      this.createFile(files[0]);
+    },
+
+    createFile(file) {
+      let reader = new FileReader();
+      this.image = file;
+      let vm = this;
+
+      reader.readAsDataURL(file);
+
+      reader.onload = function (e) {
+        vm.student.image = e.target.result;
+      }
+      console.log(this.student)
+    },
+
+    removeFile() {
+      this.student.image = '';
+    },
+
+    async uploadImageToFirebase(storage, _file, _id) {
+      const storageRef = ref(storage, _id+'_'+_file.name);
+
+      await uploadBytes(storageRef, _file).then(async (snapshot) => {
+        console.log(snapshot, 'snapshot')
+
+        await getDownloadURL(storageRef)
+            .then((url) => {
+              console.log(url, 'url')
+              this.student.image = url;
+            })
+            .catch((error) => {
+              console.log(error, 'error')
+            });
+
+      }).catch(e => {
+        console.log(e)
+      });
+    },
+
+    async deleteImageFromFirebase(storage, file_url) {
+      const desertRef = ref(storage, file_url);
+
+      deleteObject(desertRef).then(() => {
+        // File deleted successfully
+      }).catch((error) => {
+        console.log(error, 'error')
+      });
     },
 
     getRandomId() {

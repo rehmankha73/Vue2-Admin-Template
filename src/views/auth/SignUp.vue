@@ -8,54 +8,70 @@
         Sign up with details! don't worry, you can also update your profile later!
       </p>
 
-
-
       <v-form ref="form">
-        <v-text-field
-            v-model="user.name"
-            :rules="[required()]"
-            label="Your Name"
-            outlined
-        />
+        <v-row class="p-0">
+          <v-col class="p-0">
+            <v-text-field
+                v-model="user.name"
+                :rules="[required()]"
+                label="Your Name"
+                outlined
+            />
+          </v-col>
 
-        <v-text-field
-            v-model="user.email"
-            :rules="[required(), email()]"
-            label="Your Email"
-            outlined
-        />
+          <v-col class="p-0">
+            <v-text-field
+                v-model="user.email"
+                :rules="[required(), email()]"
+                label="Your Email"
+                outlined
+            />
+          </v-col>
+        </v-row>
 
-        <v-text-field
-            v-model="user.phone"
-            :rules="[required()]"
-            label="Your Phone #"
-            outlined
-            type="number"
-        />
+        <v-row class="p-0">
+          <v-col class="p-0">
+            <v-text-field
+                v-model="user.phone"
+                :rules="[required()]"
+                label="Your Phone #"
+                outlined
+                type="number"
+            />
+          </v-col>
+        </v-row>
 
-        <v-text-field
-            v-model="user.password"
-            :rules="[required()]"
-            :type="showPassword ? 'text' : 'password'"
-            class="span-2"
-            label="Password"
-            outlined
-        />
+        <v-row class="p-0">
+          <v-col class="p-0">
+            <v-text-field
+                v-model="user.password"
+                :rules="[required()]"
+                :type="showPassword ? 'text' : 'password'"
+                label="Password"
+                outlined
+            />
+          </v-col>
 
-        <v-text-field
-            v-model="confirmPassword"
-            :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
-            :type="showPassword ? 'text' : 'password'"
-            class="span-2"
-            label="Confirm Password"
-            outlined
-        />
+          <v-col class="p-0">
+            <v-text-field
+                v-model="confirmPassword"
+                :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
+                :type="showPassword ? 'text' : 'password'"
+                label="Confirm Password"
+                outlined
+            />
+          </v-col>
+        </v-row>
 
         <v-checkbox
             v-model="showPassword"
             label="Show Password"
             style="margin-top: -15px"
         />
+
+        <router-link to="/auth/sign-in" style=" text-decoration: none">
+          If you already have an account, please sign in!
+        </router-link>
 
         <v-btn
             color="primary"
@@ -65,7 +81,7 @@
             width="100%"
             @click="signUp"
         >
-          Authenticate
+          Sign Up Now!
           <v-icon small style="margin-left: 5px">mdi-arrow-right</v-icon>
         </v-btn>
       </v-form>
@@ -207,8 +223,13 @@ export default {
 
 </style>
 
-<style>
+<style scoped>
 html {
   overflow-y: auto;
 }
+
+.p-0 {
+  padding: 0px;
+}
+
 </style>

@@ -2,6 +2,7 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update Teacher' : 'Create New Teacher' }}</p>
 
+    <!--TODO:Have to make component on global level-->
     <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
       <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
       <div v-if="!teacher.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
@@ -139,6 +140,74 @@ export default {
   methods: {
     required,
 
+    async loadTeacher() {
+      if (!this.$route.query.id) return;
+      this.isEdit = true;
+      this.loading = true;
+      this.teacher = await this.teachers_service.fetchOne(this.$route.query.id);
+      this.old_image_url = this.teacher.image;
+      this.loading = false;
+    },
+
+    async submit(context) {
+      const storage = getStorage();
+
+      if (this.isEdit) {
+        context.changeLoadingMessage('Updating Teacher');
+        try {
+          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+            console.log('Invalid date, it is impossible to leave before join!')
+            return ;
+          }
+
+          if (this.image) {
+            await this.deleteImageFromFirebase(storage, this.old_image_url);
+            await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
+          }
+
+          await this.teachers_service.update(this.teacher, this.$route.query.id);
+          return true
+        } catch (e) {
+          console.log(e)
+          context.reportError({
+            'title': 'Error while creating Teacher',
+            'description': e.response.data.error
+          })
+          return false
+        }
+      } else {
+        context.changeLoadingMessage('Creating A New Teacher');
+        try {
+          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+            console.log('Invalid date, it is impossible to leave before join!')
+            return ;
+          }
+
+          let _id = this.getRandomId();
+
+          // image uploads
+          if (this.image) {
+            await this.uploadImageToFirebase(storage, this.image, _id);
+          }
+
+          // this.teacher.date_of_joining = new Date(this.teacher.date_of_joining);
+          // this.teacher.date_of_leaving = new Date(this.teacher.date_of_leaving);
+
+          await this.teachers_service.create(this.teacher, _id);
+          return true
+        } catch (e) {
+          console.log(e.response)
+          context.reportError({
+            'title': 'Error while creating Teacher',
+            'description': e.response.data.error
+          })
+
+          return false
+        }
+      }
+    },
+
+    // file/image upload controls
     onDrop: function (e) {
       e.stopPropagation();
       e.preventDefault();
@@ -198,72 +267,6 @@ export default {
       });
     },
 
-    async loadTeacher() {
-      if (!this.$route.query.id) return;
-      this.isEdit = true;
-      this.loading = true;
-      this.teacher = await this.teachers_service.fetchOne(this.$route.query.id);
-      console.log(this.teacher,'teacher')
-      this.old_image_url = this.teacher.image;
-      this.loading = false;
-    },
-
-    async submit(context) {
-      const storage = getStorage();
-
-      if (this.isEdit) {
-        context.changeLoadingMessage('Updating Teacher');
-        try {
-          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
-            console.log('Invalid date, it is impossible to leave before join!')
-            return ;
-          }
-
-          if (this.image) {
-            await this.deleteImageFromFirebase(storage, this.old_image_url);
-            await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
-          }
-
-          await this.teachers_service.update(this.teacher, this.$route.query.id);
-          return true
-        } catch (e) {
-          console.log(e)
-          context.reportError({
-            'title': 'Error while creating Teacher',
-            'description': e.response.data.error
-          })
-          return false
-        }
-      } else {
-        context.changeLoadingMessage('Creating A New Teacher');
-        try {
-          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
-            console.log('Invalid date, it is impossible to leave before join!')
-            return ;
-          }
-
-          let _id = this.getRandomId();
-          // image uploads
-          if (this.image) {
-            await this.uploadImageToFirebase(storage, this.image, _id);
-          }
-
-          this.teacher.date_of_joining = new Date(this.teacher.date_of_joining);
-          this.teacher.date_of_leaving = new Date(this.teacher.date_of_leaving);
-
-          await this.teachers_service.create(this.teacher, _id);
-          return true
-        } catch (e) {
-          console.log(e.response)
-          context.reportError({
-            'title': 'Error while creating Teacher',
-            'description': e.response.data.error
-          })
-
-          return false
-        }
-      }
-    },
 
     getRandomId() {
       return Math.random().toString(36).substr(2, 9);
