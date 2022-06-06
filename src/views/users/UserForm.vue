@@ -47,32 +47,6 @@
         persistent-hint
     />
 
-    <v-text-field
-        :readonly="isEdit"
-        v-model="user.password"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        label="Password"
-        outlined
-    />
-
-    <v-text-field
-        :readonly="isEdit"
-        v-model="confirmPassword"
-        :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
-        :type="showPassword ? 'text' : 'password'"
-        dense
-        label="Confirm Password"
-        outlined
-    />
-
-    <v-checkbox
-        v-if="!isEdit || auth_user.email === user.email"
-        v-model="showPassword"
-        label="Show Password"
-        style="margin-top: -15px"
-    />
-
     <loading-dialog v-model="loading" message="Fetching User Data"/>
   </SimpleForm>
 </template>
@@ -96,9 +70,7 @@ export default {
     old_image_url: null,
     isEdit: false,
     loading: false,
-    showPassword: false,
     users_service: new UsersService(),
-    confirmPassword: '',
     auth_user: '',
     user: {
       image: '',
@@ -123,7 +95,6 @@ export default {
       this.loading = true;
       this.user = await this.users_service.fetchOne(this.$route.query.id);
       this.old_image_url = this.user.image;
-      this.confirmPassword = this.user.password
       this.loading = false;
     },
 
@@ -215,7 +186,7 @@ export default {
     },
 
     removeFile() {
-      this.image = '';
+      this.user.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {

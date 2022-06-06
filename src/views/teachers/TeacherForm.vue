@@ -165,7 +165,7 @@ export default {
     },
 
     removeFile() {
-      this.image = '';
+      this.teacher.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {

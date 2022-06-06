@@ -158,7 +158,7 @@ export default {
       console.log(this.student)
     },
     removeFile() {
-      this.image = '';
+      this.student.image = '';
     },
 
     async getClassesData() {

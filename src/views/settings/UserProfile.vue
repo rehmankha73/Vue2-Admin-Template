@@ -88,6 +88,7 @@
 
               <v-text-field
                   class="span-2"
+                  :rules="required('A old password should match with current user password')"
                   v-model="oldPassword"
                   :type="showPassword ? 'text' : 'password'"
                   label="Old Password"
@@ -96,6 +97,7 @@
 
               <v-text-field
                   class="span-2"
+                  :rules="required('A strong password (minimum 8 characters) is required!')"
                   v-model="user.password"
                   :type="showPassword ? 'text' : 'password'"
                   label="New Password"
@@ -116,6 +118,7 @@
                   label="Show Password"
                   style="margin-top: -15px"
               />
+
 
               <loading-dialog v-model="loading" message="Loading..."/>
             </SimpleForm>
@@ -166,11 +169,8 @@ export default {
   methods: {
     required,
     loadUser() {
-      console.log('load User')
       this.loading = true;
-      console.log(getUser())
       this.user = getUser();
-      console.log(this.user, 'user')
       this.old_image_url = this.user.image;
       this.user.password = '';
       this.loading = false;

@@ -1,7 +1,6 @@
 <template>
   <data-table
       :allow-add="true"
-      :view-handler="showService"
       :edit-handler="edit"
       :headers="headers"
       :loader="loadData"
