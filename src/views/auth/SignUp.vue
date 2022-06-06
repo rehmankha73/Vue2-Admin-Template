@@ -69,7 +69,7 @@
             style="margin-top: -15px"
         />
 
-        <router-link to="/auth/sign-in" style=" text-decoration: none">
+        <router-link style=" text-decoration: none" to="/auth/sign-in">
           If you already have an account, please sign in!
         </router-link>
 
@@ -96,7 +96,7 @@ import {email, required} from '@/utils/validators';
 import LoadingDialog from '../../components/LoadingDialog';
 import ErrorDialog from '../../components/ErrorDialog';
 import {auth} from '@/firebase_config';
-import {createUserWithEmailAndPassword, signInWithEmailAndPassword} from "firebase/auth";
+import {createUserWithEmailAndPassword, sendEmailVerification, signInWithEmailAndPassword} from "firebase/auth";
 import {UsersService} from "@/services/users-service";
 
 export default {
@@ -142,36 +142,41 @@ export default {
 
     async createNewAuthUserInFirebase() {
       try {
-        await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
-            .then(async (userCredential) => {
-              // Signed in
-              const user = userCredential.user;
-              this.sign_in_user_id = user.uid;
-            })
+        const credential = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
+        this.sign_in_user_id = credential.user.uid;
       } catch (e) {
         this.error = true;
         this.errorVal = {
-          title: 'Something went wrong while registering please try again!',
+          title: 'Something went wrong while registering please try again',
+          description: 'Please double check email/password!',
         };
         this.loading = false;
       }
     },
+
     async createNewUserInDatabase() {
       await this.users_service.create(this.user, this.sign_in_user_id);
     },
 
     async signUpIntoSystem(_new_user) {
       try {
-        await signInWithEmailAndPassword(auth, _new_user.email, _new_user.password)
-            .then(async (userCredential) => {
-              // Signed in
-              const user = userCredential.user;
+        const credential = await signInWithEmailAndPassword(auth, _new_user.email, _new_user.password)
+        // Send verification email to email account
+        try {
+          await sendEmailVerification(auth.currentUser);
+        } catch (e) {
+          this.error = true;
+          this.errorVal = {
+            title: 'Error while sending verification Email!',
+            description: 'Please use a valid email!'
+          };
+          this.loading = false;
+        }
 
-              localStorage.setItem('auth_token', user.accessToken)
-              localStorage.setItem('fb_auth_user', JSON.stringify(user))
-              localStorage.setItem('auth_user', JSON.stringify(_new_user))
-              await this.$router.push('/')
-            })
+        localStorage.setItem('auth_token', credential.user.accessToken)
+        localStorage.setItem('fb_auth_user', JSON.stringify(credential.user))
+        localStorage.setItem('auth_user', JSON.stringify(_new_user))
+        await this.$router.push('/')
       } catch (e) {
         this.error = true;
         this.errorVal = {

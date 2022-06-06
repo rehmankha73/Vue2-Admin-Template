@@ -1,7 +1,7 @@
 <template>
   <div id="background">
     <v-card class="sign-in" elevation="10">
-      <img src="../../assets/logo.png" alt="Logo" class="sign-in__logo"/>
+      <img alt="Logo" class="sign-in__logo" src="../../assets/logo.png"/>
 
       <h1 class="sign-in__title">Authenticate yourself</h1>
       <p class="sign-in__message">
@@ -9,52 +9,58 @@
         have an account or have forgotten your password then you can contact the
         support regarding your issue
       </p>
+
       <v-form ref="form">
         <v-text-field
             v-model="username"
-            label="Your Email"
-            outlined
             :rules="[required(), email()]"
-        />
-        <v-text-field
-            v-model="password"
-            :rules="[required('Do not leave this field empty')]"
-            @keypress.enter="signIn"
-            label="Your Password"
-            type="password"
+            label="Your Email"
             outlined
         />
 
-        <router-link to="/auth/sign-up" style=" text-decoration: none">
+        <v-text-field
+            v-model="password"
+            :rules="[required('Do not leave this field empty')]"
+            label="Your Password"
+            outlined
+            type="password"
+            @keypress.enter="signIn"
+        />
+
+        <p style="text-decoration: none; color: #2B81D6; cursor: pointer" @click="sendForgotPasswordEmail">
+          Password forgot!
+        </p>
+
+        <router-link style=" text-decoration: none" to="/auth/sign-up">
           If you dont have account, please sign up free!
         </router-link>
 
         <v-btn
             class="mt-4"
-            @click="signIn"
             color="primary"
             dark
             elevation="0"
-            width="100%"
             height="45px"
+            width="100%"
+            @click="signIn"
         >
           Authenticate
           <v-icon small style="margin-left: 5px">mdi-arrow-right</v-icon>
         </v-btn>
       </v-form>
     </v-card>
-    <loading-dialog v-model="loading" message="You are being authenticated, Please wait..."/>
+    <loading-dialog v-model="loading" message="Your request is processing, Please wait..."/>
     <error-dialog v-model="error" :error="errorVal"/>
   </div>
 </template>
 
 <script>
-import { required, email } from '@/utils/validators';
+import {email, required} from '@/utils/validators';
 import LoadingDialog from '../../components/LoadingDialog';
 import ErrorDialog from '../../components/ErrorDialog';
-import { auth } from '@/firebase_config';
-import {  signInWithEmailAndPassword } from "firebase/auth";
-import { UsersService} from "@/services/users-service";
+import {auth} from '@/firebase_config';
+import {sendPasswordResetEmail, signInWithEmailAndPassword} from "firebase/auth";
+import {UsersService} from "@/services/users-service";
 
 export default {
   name: 'SignIn',
@@ -73,28 +79,47 @@ export default {
   methods: {
     email,
     required,
+
+    sendForgotPasswordEmail() {
+      this.loading = true;
+      if (this.username === '') {
+        console.log('Please Enter email')
+        this.error = true;
+        this.errorVal = {
+          title: 'Username/Email field is required!',
+          description: 'Please provide username/email for processing!',
+        };
+        this.loading = false;
+        return;
+      }
+
+      try {
+        console.log('password reset email sending!')
+        sendPasswordResetEmail(auth, this.username)
+      } catch (e) {
+        this.error = true;
+        this.errorVal = {
+          title: 'Error',
+          description: 'Something went wrong while sending Password Sending Email!'
+        };
+      }
+      this.loading = false;
+    },
+
     async signIn() {
       if (this.$refs.form.validate()) {
         this.loading = true;
         try {
-          await signInWithEmailAndPassword(auth, this.username, this.password)
-              .then(async (userCredential) => {
-                // Signed in
-                const user = userCredential.user;
+          const userCredential = await signInWithEmailAndPassword(auth, this.username, this.password)
 
-                this.db_user = await this.users_service.fetchOne(user.uid);
+          const user = userCredential.user;
 
-                localStorage.setItem('auth_token', user.accessToken)
-                localStorage.setItem('fb_auth_user', JSON.stringify(user))
-                localStorage.setItem('auth_user', JSON.stringify(this.db_user))
-                await this.$router.push('/')
-              })
-              .catch((error) => {
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                console.log(errorCode, 'code')
-                console.log(errorMessage, 'message')
-              });
+          this.db_user = await this.users_service.fetchOne(user.uid);
+
+          localStorage.setItem('auth_token', user.accessToken)
+          localStorage.setItem('fb_auth_user', JSON.stringify(user))
+          localStorage.setItem('auth_user', JSON.stringify(this.db_user))
+          await this.$router.push('/')
 
         } catch (e) {
           this.error = true;
@@ -104,7 +129,6 @@ export default {
           };
           this.loading = false;
         }
-
         this.loading = false;
       }
     }
