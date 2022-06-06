@@ -88,7 +88,7 @@
 
               <v-text-field
                   class="span-2"
-                  :rules="required('A old password should match with current user password')"
+                  :rules="[required('A old password should match with current user password')]"
                   v-model="oldPassword"
                   :type="showPassword ? 'text' : 'password'"
                   label="Old Password"
@@ -97,7 +97,7 @@
 
               <v-text-field
                   class="span-2"
-                  :rules="required('A strong password (minimum 8 characters) is required!')"
+                  :rules="[required('A strong password (minimum 8 characters) is required!')]"
                   v-model="user.password"
                   :type="showPassword ? 'text' : 'password'"
                   label="New Password"

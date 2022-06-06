@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
-import SignInView from './views/auth/SignIn';
 import NotFound from './views/404.vue';
 import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
@@ -10,6 +9,7 @@ import {usersRouter} from './views/users/router';
 import {classesRouter} from "@/views/classes/router";
 import {studentsRouter} from "@/views/students/router";
 import {teachersRouter} from "@/views/teachers/router";
+import {authRouter} from "@/views/auth/router";
 
 
 Vue.use(VueRouter);
@@ -34,11 +34,7 @@ const routes = [
             ...teachersRouter,
         ]
     },
-    {
-        name: 'SignIn',
-        path: '/auth/sign-in',
-        component: SignInView
-    },
+    ...authRouter,
     {
         name: 'NotFound',
         path: '**',
@@ -52,10 +48,25 @@ const router = new VueRouter({
     routes
 });
 
+const allow_routes = [
+    '/auth/sign-up',
+];
+
 router.beforeEach((to, __, next) => {
-    if (!localStorage.getItem('auth_token')) {
-        if (to.path !== '/auth/sign-in') {
-            next('/auth/sign-in');
+
+    if (!localStorage.getItem('auth_token') && !localStorage.getItem('auth_user')) {
+
+        if (allow_routes.includes(to.path)) {
+            let move_to = '';
+
+            move_to = allow_routes.filter((r) => {
+                return r.path === to.path;
+            })
+            next(move_to)
+        }
+
+        if (to.path !== '/auth/sign-in' && !allow_routes.includes(to.path)) {
+            next('/auth/sign-in')
         }
     }
     next();
