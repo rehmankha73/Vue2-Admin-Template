@@ -154,7 +154,7 @@ export default {
       if (this.isEdit) {
         context.changeLoadingMessage('Updating Teacher');
         try {
-          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+          if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
             console.log('Invalid date, it is impossible to leave before join!')
             return ;
           }
@@ -176,7 +176,7 @@ export default {
       } else {
         context.changeLoadingMessage('Creating A New Teacher');
         try {
-          if(this.teacher.date_of_joining > this.teacher.date_of_leaving) {
+          if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
             console.log('Invalid date, it is impossible to leave before join!')
             return ;
           }
