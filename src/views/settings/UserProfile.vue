@@ -30,18 +30,11 @@
             <SimpleForm :onSubmit="updateProfile" @done="reloadData">
               <p class="span-2 form__title">Update User Profile</p>
 
-              <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-                <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
-                <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
-                     @click="$refs['file-input'].click();">
-                  + Select/Drop Image
-                </div>
-
-                <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
-                  <img :src="user.image" alt="" class="img"/>
-                  <button class="icon" @click.stop="removeFile">X</button>
-                </div>
-              </div>
+              {{ old_image }}
+              <image-upload
+                  :image_obj="old_image"
+                  @uploadedImage="getUploadedImage"
+              />
 
               <v-text-field
                   v-model="user.name"
@@ -137,15 +130,16 @@ import {auth} from '@/firebase_config';
 import {updatePassword} from "firebase/auth";
 import {getUser} from '@/utils/local';
 import {UsersService} from "@/services/users-service";
+import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {LoadingDialog, SimpleForm},
+  components: {ImageUpload,LoadingDialog, SimpleForm},
 
   data: () => ({
     users_service: new UsersService(),
     image: null,
-    old_image_url: null,
+    old_image: null,
     loading: false,
     showPassword: false,
     confirmPassword: '',
@@ -153,7 +147,7 @@ export default {
     auth_user: '',
     new_created_user: '',
     user: {
-      image: '',
+      image: {},
       name: '',
       email: '',
       phone: '',
@@ -163,16 +157,33 @@ export default {
 
   mounted() {
     this.loadUser();
-    console.log(JSON.parse(localStorage.getItem('fb_auth_user')), 'from user profile update page!');
   },
 
   methods: {
     required,
+
+    getUploadedImage(_image_obj) {
+      this.image = _image_obj.file;
+    },
+
     loadUser() {
       this.loading = true;
       this.user = getUser();
-      this.old_image_url = this.user.image;
+      console.log(this.user.image, 'load')
+
+      this.old_image = {
+        url: this.user.image ? this.user.image : '',
+      };
+
+      console.log(this.old_image, 'old_image')
+
+      // this.old_image = {
+      //   ...this.old_image
+      // }
+
       this.user.password = '';
+
+      this.$forceUpdate();
       this.loading = false;
     },
 
@@ -183,10 +194,16 @@ export default {
       try {
 
         if (this.image) {
-          await this.deleteImageFromFirebase(storage, this.old_image_url);
+          console.log(this.image,'image')
+          console.log(this.old_image.url, 'old_image');
+          if(this.old_image && this.old_image.url) {
+            await this.deleteImageFromFirebase(storage, this.old_image.url);
+          }
+
           await this.uploadImageToFirebase(storage, this.image, auth.currentUser.uid);
         }
 
+        console.log(this.user, 'final user')
         await this.users_service.update(this.user, auth.currentUser.uid);
 
         return true
@@ -246,36 +263,6 @@ export default {
       await this.loadUser()
     },
 
-    // for image storage control
-    onDrop: function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      let files = e.dataTransfer.files;
-      this.createFile(files[0]);
-    },
-
-    onChange(e) {
-      let files = e.target.files;
-      this.createFile(files[0]);
-    },
-
-    createFile(file) {
-      let reader = new FileReader();
-      this.image = file;
-      let vm = this;
-
-      reader.readAsDataURL(file);
-
-      reader.onload = function (e) {
-        vm.user.image = e.target.result;
-      }
-      console.log(this.user)
-    },
-
-    removeFile() {
-      this.user.image = '';
-    },
-
     async uploadImageToFirebase(storage, _file, _id) {
       const storageRef = ref(storage, _id + '_' + _file.name);
 
@@ -314,85 +301,5 @@ p {
   font-weight: bold;
   text-align: left;
 }
-
-.icon {
-  position: absolute;
-  color: red;
-  top: 0;
-  right: 5px;
-}
-
-html, body {
-  height: 100%;
-  text-align: center;
-}
-
-.btn {
-  background-color: #d3394c;
-  border: 0;
-  color: #fff;
-  cursor: pointer;
-  display: inline-block;
-  font-weight: bold;
-  padding: 15px 35px;
-  position: relative;
-}
-
-.btn:hover {
-  background-color: #722040;
-}
-
-input[type="file"] {
-  position: absolute;
-  opacity: 0;
-  z-index: -1;
-}
-
-.align-center {
-  text-align: center;
-}
-
-.helper {
-  height: 100%;
-  display: inline-block;
-  vertical-align: middle;
-  width: 0;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.hidden.image {
-  display: inline-block !important;
-}
-
-.display-inline {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.img {
-  border: 1px solid #f6f6f6;
-  display: inline-block;
-  height: 200px;
-  width: 200px;
-  margin-left: -2px;
-  margin-top: -2px;
-  object-fit: contain;
-}
-
-.drop {
-  background-color: #f2f2f2;
-  border: 2px dashed #ccc;
-  border-radius: 2px;
-  height: 200px;
-  width: 200px;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
 </style>
 

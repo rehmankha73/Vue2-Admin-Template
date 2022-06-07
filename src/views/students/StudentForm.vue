@@ -19,9 +19,7 @@
         type="number"
     />
 
-    <div
-        class="d-flex span-2"
-    >
+    <div class="d-flex span-2">
       <v-select
           v-model="student.class_id"
           item-value="value" item-text="text"

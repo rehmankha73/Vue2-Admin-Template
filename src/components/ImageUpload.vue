@@ -1,5 +1,6 @@
 <template>
   <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
+    {{ image }}
     <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
     <div v-if="!(image && image.url)" class="mx-4 cursor-pointer" style="margin-top: 80px"
          @click="$refs['file-input'].click();">
@@ -19,8 +20,7 @@ export default {
   props: {
     image_obj: {
       type: Object,
-      default: () => {
-      },
+      default: () => {},
     }
   },
 
@@ -38,6 +38,7 @@ export default {
     },
 
     image_obj(newVal) {
+      console.log(newVal, 'from component!')
       this.image = newVal;
     }
   },
