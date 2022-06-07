@@ -3,19 +3,11 @@
 
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
-    <!--TODO:Have to make component on global level-->
-    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-      <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
-      <div v-if="!user.image" class="mx-4 cursor-pointer" style="margin-top: 80px"
-           @click="$refs['file-input'].click();">
-        + Select/Drop Image
-      </div>
-
-      <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
-        <img :src="user.image" alt="" class="img"/>
-        <button class="icon" @click="removeFile">X</button>
-      </div>
-    </div>
+    <image-upload
+        :isEdit="isEdit"
+        :image_obj="old_image"
+        @uploadedImage="getUploadedImage"
+    />
 
     <v-text-field
         v-model="user.name"
@@ -38,8 +30,8 @@
     />
 
     <v-text-field
-        :readonly="isEdit"
         v-model="user.email"
+        :readonly="isEdit"
         :rules="[required('Email must be provided')]"
         class="span-2"
         hint="Must be a unique email"
@@ -50,20 +42,20 @@
 
     <v-text-field
         v-if="!isEdit"
-        class="span-2"
-        :rules="[required('A strong password (minimum 8 characters) is required!')]"
         v-model="user.password"
+        :rules="[required('A strong password (minimum 8 characters) is required!')]"
         :type="showPassword ? 'text' : 'password'"
+        class="span-2"
         label="New Password"
         outlined
     />
 
     <v-text-field
         v-if="!isEdit"
-        class="span-2"
         v-model="confirmPassword"
         :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
         :type="showPassword ? 'text' : 'password'"
+        class="span-2"
         label="Confirm Password"
         outlined
     />
@@ -87,15 +79,16 @@ import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {createUserWithEmailAndPassword} from "firebase/auth";
 import {auth} from '@/firebase_config'
-import { getUser } from '@/utils/local';
+import {getUser} from '@/utils/local';
+import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {LoadingDialog, SimpleForm},
+  components: {ImageUpload, LoadingDialog, SimpleForm},
 
   data: () => ({
     image: null,
-    old_image_url: null,
+    old_image: {url: null},
     isEdit: false,
     loading: false,
     users_service: new UsersService(),
@@ -103,7 +96,7 @@ export default {
     showPassword: false,
     confirmPassword: '',
     user: {
-      image: '',
+      image: {},
       name: '',
       email: '',
       phone: '',
@@ -119,12 +112,20 @@ export default {
 
   methods: {
     required,
+    getUploadedImage(_image_obj) {
+      this.image = _image_obj.file;
+    },
+
     async loadUser() {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
       this.user = await this.users_service.fetchOne(this.$route.query.id);
-      this.old_image_url = this.user.image;
+      this.old_image = {
+        url: this.user.image
+      };
+
+      // this.$forceUpdate();
       this.loading = false;
     },
 
@@ -134,9 +135,8 @@ export default {
       if (this.isEdit) {
         context.changeLoadingMessage('Updating User');
         try {
-
           if (this.image) {
-            await this.deleteImageFromFirebase(storage, this.old_image_url);
+            await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
           }
 
@@ -151,6 +151,7 @@ export default {
           return false
         }
       } else {
+
         context.changeLoadingMessage('Creating A New User');
         try {
           if (this.user.password !== this.confirmPassword) {
@@ -160,15 +161,11 @@ export default {
             return true;
           }
 
-          try{
-            await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
-                .then((userCredential) => {
-                  // Signed in
-                  this.auth_user = userCredential.user;
-                })
-                .catch((error) => {
-                  console.log(error)
-                });
+          try {
+            const credentials = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
+            // Signed in
+            this.auth_user = credentials.user;
+
           } catch (e) {
             context.reportError({
               'title': "Something went wrong while creating new user, please try later!",
@@ -176,12 +173,12 @@ export default {
             })
           }
 
-
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, this.auth_user.uid);
           }
 
           await this.users_service.create(this.user, this.auth_user.uid);
+
           return true
         } catch (e) {
           context.reportError({
@@ -198,35 +195,6 @@ export default {
       return Math.random().toString(36).substr(2, 9);
     },
 
-    // for image storage control
-    onDrop: function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      let files = e.dataTransfer.files;
-      this.createFile(files[0]);
-    },
-
-    onChange(e) {
-      let files = e.target.files;
-      this.createFile(files[0]);
-    },
-
-    createFile(file) {
-      let reader = new FileReader();
-      this.image = file;
-      let vm = this;
-
-      reader.readAsDataURL(file);
-
-      reader.onload = function (e) {
-        vm.user.image = e.target.result;
-      }
-      console.log(this.user)
-    },
-
-    removeFile() {
-      this.user.image = '';
-    },
 
     async uploadImageToFirebase(storage, _file, _id) {
       const storageRef = ref(storage, _id + '_' + _file.name);
@@ -254,7 +222,7 @@ export default {
       deleteObject(desertRef).then(() => {
         // File deleted successfully
       }).catch((error) => {
-        console.log(error, 'error')
+        console.log(error, 'error from deleteImage')
       });
     },
   }
@@ -266,84 +234,4 @@ p {
   font-weight: bold;
   text-align: left;
 }
-
-.icon {
-  position: absolute;
-  color: red;
-  top: 0;
-  right: 5px;
-}
-
-html, body {
-  height: 100%;
-  text-align: center;
-}
-
-.btn {
-  background-color: #d3394c;
-  border: 0;
-  color: #fff;
-  cursor: pointer;
-  display: inline-block;
-  font-weight: bold;
-  padding: 15px 35px;
-  position: relative;
-}
-
-.btn:hover {
-  background-color: #722040;
-}
-
-input[type="file"] {
-  position: absolute;
-  opacity: 0;
-  z-index: -1;
-}
-
-.align-center {
-  text-align: center;
-}
-
-.helper {
-  height: 100%;
-  display: inline-block;
-  vertical-align: middle;
-  width: 0;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.hidden.image {
-  display: inline-block !important;
-}
-
-.display-inline {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.img {
-  border: 1px solid #f6f6f6;
-  display: inline-block;
-  height: 200px;
-  width: 200px;
-  margin-left: -2px;
-  margin-top: -2px;
-  object-fit: contain;
-}
-
-.drop {
-  background-color: #f2f2f2;
-  border: 2px dashed #ccc;
-  border-radius: 2px;
-  height: 200px;
-  width: 200px;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
 </style>

@@ -12,7 +12,6 @@ import {teachersRouter} from "@/views/teachers/router";
 import {authRouter} from "@/views/auth/router";
 import EmailVerification from "@/views/auth/EmailVerification";
 
-
 Vue.use(VueRouter);
 
 const routes = [
@@ -81,10 +80,7 @@ router.beforeEach((to, __, next) => {
     }
     else {
         let _u = JSON.parse(localStorage.getItem('fb_auth_user'));
-        console.log(_u)
-        console.log(_u.emailVerified)
         if(!_u.emailVerified && to.path !== '/auth/email-verification') {
-            console.log('user is not verified')
             next('/auth/email-verification')
         }
     }
