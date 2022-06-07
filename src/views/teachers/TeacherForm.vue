@@ -2,18 +2,10 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update Teacher' : 'Create New Teacher' }}</p>
 
-    <!--TODO:Have to make component on global level-->
-    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-      <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
-      <div v-if="!teacher.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
-        + Select/Drop Image
-      </div>
-
-      <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
-        <img :src="teacher.image" alt="" class="img"/>
-        <button class="icon" @click="removeFile">X</button>
-      </div>
-    </div>
+    <image-upload
+        :image_obj="old_image"
+        @uploadedImage="getUploadedImage"
+    />
 
     <v-text-field
         v-model="teacher.name"
@@ -71,7 +63,6 @@
         label="Is Working"
     ></v-checkbox>
 
-
     <div class="span-2 mt-2">
       <label for="date_of_joining" style="color:#9E9E9E">
         Date of Joining
@@ -106,14 +97,15 @@ import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {TeachersService} from "@/services/teachers-service";
+import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {LoadingDialog, SimpleForm},
+  components: {ImageUpload, LoadingDialog, SimpleForm},
 
   data: () => ({
     image: null,
-    old_image_url: null,
+    old_image: null,
     isEdit: false,
     loading: false,
     showPassword: false,
@@ -121,7 +113,7 @@ export default {
     confirmPassword: '',
     class_data: [],
     teacher: {
-      image: '',
+      image: {},
       name: '',
       email: '',
       phone: '',
@@ -140,12 +132,19 @@ export default {
   methods: {
     required,
 
+    getUploadedImage(_image_obj) {
+      this.image = _image_obj.file;
+    },
+
     async loadTeacher() {
       if (!this.$route.query.id) return;
       this.isEdit = true;
       this.loading = true;
       this.teacher = await this.teachers_service.fetchOne(this.$route.query.id);
-      this.old_image_url = this.teacher.image;
+      this.old_image = {
+        url: this.teacher.image
+      };
+
       this.loading = false;
     },
 
@@ -161,17 +160,16 @@ export default {
           }
 
           if (this.image) {
-            await this.deleteImageFromFirebase(storage, this.old_image_url);
+            await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
           }
 
           await this.teachers_service.update(this.teacher, this.$route.query.id);
           return true
         } catch (e) {
-          console.log(e)
           context.reportError({
             'title': 'Error while creating Teacher',
-            'description': e.response.data.error
+            'description': e.message,
           })
           return false
         }
@@ -190,51 +188,16 @@ export default {
             await this.uploadImageToFirebase(storage, this.image, _id);
           }
 
-          // this.teacher.date_of_joining = new Date(this.teacher.date_of_joining);
-          // this.teacher.date_of_leaving = new Date(this.teacher.date_of_leaving);
-
           await this.teachers_service.create(this.teacher, _id);
           return true
         } catch (e) {
-          console.log(e.response)
           context.reportError({
             'title': 'Error while creating Teacher',
-            'description': e.response.data.error
+            'description': e.message
           })
-
           return false
         }
       }
-    },
-
-    // file/image upload controls
-    onDrop: function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      let files = e.dataTransfer.files;
-      this.createFile(files[0]);
-    },
-
-    onChange(e) {
-      let files = e.target.files;
-      this.createFile(files[0]);
-    },
-
-    createFile(file) {
-      let reader = new FileReader();
-      this.image = file;
-      let vm = this;
-
-      reader.readAsDataURL(file);
-
-      reader.onload = function (e) {
-        vm.teacher.image = e.target.result;
-      }
-      console.log(this.teacher)
-    },
-
-    removeFile() {
-      this.teacher.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
@@ -266,7 +229,6 @@ export default {
         console.log(error, 'error')
       });
     },
-
 
     getRandomId() {
       return Math.random().toString(36).substr(2, 9);
