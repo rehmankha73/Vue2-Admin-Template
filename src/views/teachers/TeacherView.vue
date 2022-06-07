@@ -28,6 +28,12 @@
       {{ formatDate(item.date_of_joining) }}
     </template>
 
+    <template #isWorking="{ item }">
+      <span>
+          {{ item.is_working ? 'Working' : 'Left' }}
+      </span>
+    </template>
+
     <!--    <template #scopes="{ item }">-->
     <!--      {{ item.scopes.join(', ').substr(0, 80) + '...' }}-->
     <!--    </template>-->
@@ -71,6 +77,11 @@ export default {
         text: 'Phone',
         value: 'phone',
         sortable: true,
+        width: 200
+      },
+      {
+        text: 'Working Status',
+        value: 'is_working',
         width: 200
       },
       {

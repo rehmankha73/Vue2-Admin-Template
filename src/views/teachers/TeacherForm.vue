@@ -60,17 +60,18 @@
     <v-checkbox
         class="span-2"
         v-model="teacher.is_working"
-        label="Is Working"
+        label="Currently Working"
     ></v-checkbox>
 
     <div class="span-2 mt-2">
       <label for="date_of_joining" style="color:#9E9E9E">
         Date of Joining
-        <input
+        <v-text-field
             v-model="teacher.date_of_joining"
+            :rules="[required('Date of joining is required!')]"
             id="date_of_joining"
             type="date"
-            class="span-2 date-type-style"
+            class="span-2"
             placeholder="Date of Joining" />
       </label>
     </div>
@@ -78,11 +79,12 @@
     <div v-if="!teacher.is_working" class="span-2 mt-4">
       <label for="date_of_leaving" style="color:#9E9E9E">
         Date of Leaving
-        <input
+        <v-text-field
             v-model="teacher.date_of_leaving"
+            :rules="!teacher.is_working ? [required('Date of joining is required!')] : ''"
             id="date_of_leaving"
             type="date"
-            class="span-2 date-type-style"
+            class="span-2 "
             placeholder="Date of Leaving" />
       </label>
     </div>
