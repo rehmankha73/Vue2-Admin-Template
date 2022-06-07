@@ -1,19 +1,15 @@
 <template>
-
   <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-
     <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
     <div v-if="!(image && image.url)" class="mx-4 cursor-pointer" style="margin-top: 80px"
          @click="$refs['file-input'].click();">
       + Select/Drop Image
     </div>
 
-
     <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
       <img :src="image.url" alt="" class="img"/>
       <button class="icon" @click="removeFile">X</button>
     </div>
-
   </div>
 </template>
 
@@ -21,13 +17,10 @@
 export default {
   name: "ImageUpload",
   props: {
-    isEdit: {
-      type: Boolean,
-      default: false,
-    },
     image_obj: {
       type: Object,
-      default: () => {},
+      default: () => {
+      },
     }
   },
 
@@ -40,26 +33,17 @@ export default {
   watch: {
     image: {
       handler(newVal) {
-        console.log(newVal, 'file')
         this.$emit('uploadedImage', newVal)
       }, deep: true,
     },
 
     image_obj(newVal) {
-      console.log(newVal, 'old image from  component')
       this.image = newVal;
     }
   },
 
-  // mounted() {
-  //   console.log(this.image.url, 'component')
-  //   console.log(this.isEdit, 'component')
-  //   if (this.isEdit) {
-  //     this.image.url = this.image_obj.url;
-  //   }
-  // },
-
   methods: {
+
     // for image storage control
     onDrop: function (e) {
       e.stopPropagation();
@@ -81,16 +65,6 @@ export default {
         type: file.type,
         size: file.size
       };
-
-      // let reader = new FileReader();
-      // this.image = file;
-      // let vm = this;
-      //
-      // reader.readAsDataURL(file);
-      //
-      // reader.onload = function (e) {
-      //   vm.image = e.target.result;
-      // }
     },
 
     removeFile() {

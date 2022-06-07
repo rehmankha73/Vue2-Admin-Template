@@ -4,7 +4,6 @@
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
     <image-upload
-        :isEdit="isEdit"
         :image_obj="old_image"
         @uploadedImage="getUploadedImage"
     />
@@ -88,7 +87,7 @@ export default {
 
   data: () => ({
     image: null,
-    old_image: {url: null},
+    old_image: null,
     isEdit: false,
     loading: false,
     users_service: new UsersService(),
@@ -112,6 +111,7 @@ export default {
 
   methods: {
     required,
+
     getUploadedImage(_image_obj) {
       this.image = _image_obj.file;
     },
@@ -125,7 +125,6 @@ export default {
         url: this.user.image
       };
 
-      // this.$forceUpdate();
       this.loading = false;
     },
 
@@ -145,7 +144,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while creating User',
-            'description': e.response
+            'description': e.message
           })
 
           return false
@@ -178,7 +177,6 @@ export default {
           }
 
           await this.users_service.create(this.user, this.auth_user.uid);
-
           return true
         } catch (e) {
           context.reportError({
@@ -190,11 +188,6 @@ export default {
         }
       }
     },
-
-    getRandomId() {
-      return Math.random().toString(36).substr(2, 9);
-    },
-
 
     async uploadImageToFirebase(storage, _file, _id) {
       const storageRef = ref(storage, _id + '_' + _file.name);

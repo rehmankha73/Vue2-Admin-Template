@@ -2,18 +2,10 @@
   <SimpleForm :onSubmit="submit" @done="$router.back()">
     <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
-    <!--TODO:Have to make component on global level-->
-    <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-      <input name="image" type="file" ref="file-input" @change="onChange" style="display: none;">
-      <div v-if="!student.image" class="mx-4 cursor-pointer" style="margin-top: 80px" @click="$refs['file-input'].click();">
-        + Select/Drop Image
-      </div>
-
-      <div v-else class="d-flex align-start" v-bind:class="{ 'image': true }" style="position: relative">
-        <img :src="student.image" alt="" class="img"/>
-        <button class="icon" @click="removeFile">X</button>
-      </div>
-    </div>
+    <image-upload
+        :image_obj="old_image"
+        @uploadedImage="getUploadedImage"
+    />
 
     <v-text-field
         disabled
@@ -41,7 +33,6 @@
           outlined
       ></v-select>
     </div>
-
 
     <v-text-field
         v-model="student.name"
@@ -89,19 +80,20 @@
 
 <script>
 import SimpleForm from '../../components/Form';
-import {StudentsService} from '@/services/students-service';
-import {ClassesService} from "@/services/classes-service";
+import { StudentsService } from '@/services/students-service';
+import { ClassesService } from "@/services/classes-service";
 import LoadingDialog from '../../components/LoadingDialog';
-import {required} from '@/utils/validators';
-import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
+import { required } from '@/utils/validators';
+import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {LoadingDialog, SimpleForm},
+  components: {ImageUpload, LoadingDialog, SimpleForm},
 
   data: () => ({
     image: null,
-    old_image_url: null,
+    old_image: null,
     isEdit: false,
     loading: false,
     showPassword: false,
@@ -112,7 +104,7 @@ export default {
     student: {
       class_id: '',
       roll_no: '',
-      image: '',
+      image: {},
       name: '',
       email: '',
       phone: '',
@@ -123,6 +115,7 @@ export default {
   mounted() {
     this.loadStudent();
     this.getClassesData();
+
     if (!this.isEdit) {
       this.student.roll_no = parseInt(this.$route.query.new_roll_no);
     }
@@ -130,6 +123,11 @@ export default {
 
   methods: {
     required,
+
+    getUploadedImage(_image_obj) {
+      this.image = _image_obj.file;
+    },
+
     getClassesItems() {
       let _data = [];
       this.class_data.forEach((c) => { _data.push({ value: c.id, text: c.title}) })
@@ -145,7 +143,10 @@ export default {
       this.isEdit = true;
       this.loading = true;
       this.student = await this.students_service.fetchOne(this.$route.query.id);
-      this.old_image_url = this.student.image;
+      this.old_image = {
+        url: this.student.image
+      };
+
       this.loading = false;
     },
 
@@ -156,25 +157,24 @@ export default {
         context.changeLoadingMessage('Updating Student');
         try {
           if (this.image) {
-            await this.deleteImageFromFirebase(storage, this.old_image_url);
+            await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
           }
           await this.students_service.update(this.student, this.$route.query.id);
           return true
         } catch (e) {
-          console.log(e)
           context.reportError({
             'title': 'Error while creating Student',
-            'description': e.response.data.error
+            'description': e.message
           })
 
           return false
         }
       } else {
-
         context.changeLoadingMessage('Creating A New Student');
         try {
           let _id = this.getRandomId();
+
           // image uploads
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, _id);
@@ -183,45 +183,13 @@ export default {
           await this.students_service.create(this.student, _id);
           return true
         } catch (e) {
-          console.log(e.response)
           context.reportError({
             'title': 'Error while creating Student',
-            'description': e.response.data.error
+            'description': e.message
           })
-
           return false
         }
       }
-    },
-
-    // image upload code
-    onDrop: function (e) {
-      e.stopPropagation();
-      e.preventDefault();
-      let files = e.dataTransfer.files;
-      this.createFile(files[0]);
-    },
-
-    onChange(e) {
-      let files = e.target.files;
-      this.createFile(files[0]);
-    },
-
-    createFile(file) {
-      let reader = new FileReader();
-      this.image = file;
-      let vm = this;
-
-      reader.readAsDataURL(file);
-
-      reader.onload = function (e) {
-        vm.student.image = e.target.result;
-      }
-      console.log(this.student)
-    },
-
-    removeFile() {
-      this.student.image = '';
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
