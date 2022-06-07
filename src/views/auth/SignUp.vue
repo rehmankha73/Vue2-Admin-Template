@@ -10,7 +10,7 @@
 
       <v-form ref="form">
         <v-row class="p-0">
-          <v-col class="p-0">
+          <v-col class="p-0 mr-2">
             <v-text-field
                 v-model="user.name"
                 :rules="[required()]"
@@ -19,7 +19,7 @@
             />
           </v-col>
 
-          <v-col class="p-0">
+          <v-col class="p-0 ml-2">
             <v-text-field
                 v-model="user.email"
                 :rules="[required(), email()]"
@@ -42,7 +42,7 @@
         </v-row>
 
         <v-row class="p-0">
-          <v-col class="p-0">
+          <v-col class="p-0 mr-2">
             <v-text-field
                 v-model="user.password"
                 :rules="[required()]"
@@ -52,7 +52,7 @@
             />
           </v-col>
 
-          <v-col class="p-0">
+          <v-col class="p-0 ml-2">
             <v-text-field
                 v-model="confirmPassword"
                 :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
@@ -74,7 +74,7 @@
         </router-link>
 
         <v-btn
-            color="primary"
+            color="primary mt-4"
             dark
             elevation="0"
             height="45px"

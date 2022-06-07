@@ -80,7 +80,7 @@ export default {
     email,
     required,
 
-    sendForgotPasswordEmail() {
+    async sendForgotPasswordEmail() {
       this.loading = true;
       if (this.username === '') {
         console.log('Please Enter email')
@@ -94,8 +94,8 @@ export default {
       }
 
       try {
-        console.log('password reset email sending!')
-        sendPasswordResetEmail(auth, this.username)
+        this.loading = true;
+        await sendPasswordResetEmail(auth, this.username)
       } catch (e) {
         this.error = true;
         this.errorVal = {
@@ -127,8 +127,8 @@ export default {
             title: 'Error while signing in',
             description: 'Email or Password incorrect!'
           };
-          this.loading = false;
         }
+
         this.loading = false;
       }
     }

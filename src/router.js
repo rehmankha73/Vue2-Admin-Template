@@ -10,6 +10,7 @@ import {classesRouter} from "@/views/classes/router";
 import {studentsRouter} from "@/views/students/router";
 import {teachersRouter} from "@/views/teachers/router";
 import {authRouter} from "@/views/auth/router";
+import EmailVerification from "@/views/auth/EmailVerification";
 
 
 Vue.use(VueRouter);
@@ -34,6 +35,11 @@ const routes = [
             ...teachersRouter,
         ]
     },
+    {
+        name: 'EmailVerification',
+        path: '/auth/email-verification',
+        component: EmailVerification
+    },
     ...authRouter,
     {
         name: 'NotFound',
@@ -54,7 +60,10 @@ const allow_routes = [
 
 router.beforeEach((to, __, next) => {
 
-    if (!localStorage.getItem('auth_token') && !localStorage.getItem('auth_user')) {
+    if (
+        !localStorage.getItem('auth_token') &&
+        !localStorage.getItem('auth_user') &&
+        !localStorage.getItem('fb_auth_user')) {
 
         if (allow_routes.includes(to.path)) {
             let move_to = '';
@@ -62,6 +71,7 @@ router.beforeEach((to, __, next) => {
             move_to = allow_routes.filter((r) => {
                 return r.path === to.path;
             })
+
             next(move_to)
         }
 
@@ -69,6 +79,16 @@ router.beforeEach((to, __, next) => {
             next('/auth/sign-in')
         }
     }
+    else {
+        let _u = JSON.parse(localStorage.getItem('fb_auth_user'));
+        console.log(_u)
+        console.log(_u.emailVerified)
+        if(!_u.emailVerified && to.path !== '/auth/email-verification') {
+            console.log('user is not verified')
+            next('/auth/email-verification')
+        }
+    }
+
     next();
 });
 

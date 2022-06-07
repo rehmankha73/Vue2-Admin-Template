@@ -163,6 +163,7 @@ export default {
 
   mounted() {
     this.loadUser();
+    console.log(JSON.parse(localStorage.getItem('fb_auth_user')), 'from user profile update page!');
   },
 
   methods: {
