@@ -86,6 +86,7 @@ export default {
   components: {ImageUpload, LoadingDialog, SimpleForm},
 
   data: () => ({
+    is_mounted: false,
     image: null,
     old_image: null,
     isEdit: false,
@@ -107,6 +108,7 @@ export default {
   mounted() {
     this.loadUser();
     this.auth_user = getUser() ? getUser() : null;
+
   },
 
   methods: {

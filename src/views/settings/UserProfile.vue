@@ -29,8 +29,7 @@
           <v-card-text>
             <SimpleForm :onSubmit="updateProfile" @done="reloadData">
               <p class="span-2 form__title">Update User Profile</p>
-
-              {{ old_image }}
+              
               <image-upload
                   :image_obj="old_image"
                   @uploadedImage="getUploadedImage"
