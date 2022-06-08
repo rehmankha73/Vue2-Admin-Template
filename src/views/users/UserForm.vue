@@ -145,23 +145,16 @@ export default {
           return true
         } catch (e) {
           context.reportError({
-            'title': 'Error while creating User',
+            'title': 'Error while updating User',
             'description': e.message
           })
-
           return false
         }
       } else {
-
         context.changeLoadingMessage('Creating A New User');
         try {
-          if (this.user.password !== this.confirmPassword) {
-            context.reportError({
-              'title': "Password doesn't match",
-            })
-            return true;
-          }
 
+          // creating new user with email & password
           try {
             const credentials = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
             // Signed in
@@ -172,6 +165,7 @@ export default {
               'title': "Something went wrong while creating new user, please try later!",
               'description': e.message,
             })
+            return false;
           }
 
           if (this.image) {
@@ -185,7 +179,6 @@ export default {
             'title': 'Error while creating User',
             'description': e.message
           })
-
           return false
         }
       }

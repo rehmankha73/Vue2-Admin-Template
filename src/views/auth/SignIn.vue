@@ -83,14 +83,13 @@ export default {
     async sendForgotPasswordEmail() {
       this.loading = true;
       if (this.username === '') {
-        console.log('Please Enter email')
         this.error = true;
         this.errorVal = {
           title: 'Username/Email field is required!',
           description: 'Please provide username/email for processing!',
         };
         this.loading = false;
-        return;
+        return false
       }
 
       try {

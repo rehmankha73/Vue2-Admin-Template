@@ -157,8 +157,11 @@ export default {
         context.changeLoadingMessage('Updating Teacher');
         try {
           if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
-            console.log('Invalid date, it is impossible to leave before join!')
-            return ;
+            context.reportError({
+              'title': 'Error',
+              'description': "Invalid date, it is impossible to leave before join!",
+            })
+            return false
           }
 
           if (this.image) {
@@ -179,8 +182,11 @@ export default {
         context.changeLoadingMessage('Creating A New Teacher');
         try {
           if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
-            console.log('Invalid date, it is impossible to leave before join!')
-            return ;
+            context.reportError({
+              'title': 'Error',
+              'description': "Invalid date, it is impossible to leave before join!",
+            })
+            return false
           }
 
           let _id = this.getRandomId();

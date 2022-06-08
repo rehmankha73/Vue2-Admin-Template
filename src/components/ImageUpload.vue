@@ -37,7 +37,6 @@ export default {
     },
 
     image_obj(newVal) {
-      console.log(newVal, 'from component!')
       this.image = newVal;
     }
   },

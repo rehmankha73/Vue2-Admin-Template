@@ -111,27 +111,22 @@ export default {
           await this.classes_service.update(this.class_data, this.$route.query.id);
           return true
         } catch (e) {
-          console.log(e)
           context.reportError({
-            'title': 'Error while creating Class',
-            'description': e.response.data.error
+            'title': 'Error!',
+            'description': 'Something went wrong while updating class.'
           })
-
           return false
         }
       } else {
-
         context.changeLoadingMessage('Creating A New Class');
         try {
           await this.classes_service.create(this.class_data, this.getRandomId());
           return true
         } catch (e) {
-          console.log(e.response)
           context.reportError({
             'title': 'Error while creating Class',
-            'description': e.response.data.error
+            'description': 'Something went wrong while creating class'
           })
-
           return false
         }
       }

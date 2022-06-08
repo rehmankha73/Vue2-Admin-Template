@@ -165,7 +165,6 @@ export default {
             'title': 'Error while creating Student',
             'description': e.message
           })
-
           return false
         }
       } else {

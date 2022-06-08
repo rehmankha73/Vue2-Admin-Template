@@ -29,7 +29,7 @@
           <v-card-text>
             <SimpleForm :onSubmit="updateProfile" @done="reloadData">
               <p class="span-2 form__title">Update User Profile</p>
-              
+
               <image-upload
                   :image_obj="old_image"
                   @uploadedImage="getUploadedImage"
@@ -75,32 +75,32 @@
       <v-tab-item>
         <v-card flat>
           <v-card-text>
-            <SimpleForm :onSubmit="updatePassword" @done="reloadData">
+            <SimpleForm :onSubmit="updatePassword">
               <p class="span-2 form__title">Update User Password</p>
 
               <v-text-field
-                  class="span-2"
-                  :rules="[required('A old password should match with current user password')]"
                   v-model="oldPassword"
+                  :rules="[required('A old password should match with current user password')]"
                   :type="showPassword ? 'text' : 'password'"
+                  class="span-2"
                   label="Old Password"
                   outlined
               />
 
               <v-text-field
-                  class="span-2"
-                  :rules="[required('A strong password (minimum 8 characters) is required!')]"
                   v-model="user.password"
+                  :rules="[required('A strong password (minimum 8 characters) is required!')]"
                   :type="showPassword ? 'text' : 'password'"
+                  class="span-2"
                   label="New Password"
                   outlined
               />
 
               <v-text-field
-                  class="span-2"
                   v-model="confirmPassword"
                   :rules="[(v) => (v && v === user.password) || 'Passwords does not match']"
                   :type="showPassword ? 'text' : 'password'"
+                  class="span-2"
                   label="Confirm Password"
                   outlined
               />
@@ -126,14 +126,14 @@ import LoadingDialog from '../../components/LoadingDialog';
 import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {auth} from '@/firebase_config';
-import {updatePassword} from "firebase/auth";
+import {signInWithEmailAndPassword, updatePassword} from "firebase/auth";
 import {getUser} from '@/utils/local';
 import {UsersService} from "@/services/users-service";
 import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {ImageUpload,LoadingDialog, SimpleForm},
+  components: {ImageUpload, LoadingDialog, SimpleForm},
 
   data: () => ({
     users_service: new UsersService(),
@@ -141,9 +141,8 @@ export default {
     old_image: null,
     loading: false,
     showPassword: false,
-    confirmPassword: '',
     oldPassword: '',
-    auth_user: '',
+    confirmPassword: '',
     new_created_user: '',
     user: {
       image: {},
@@ -168,91 +167,88 @@ export default {
     loadUser() {
       this.loading = true;
       this.user = getUser();
-      console.log(this.user.image, 'load')
-
       this.old_image = {
         url: this.user.image ? this.user.image : '',
       };
-
-      console.log(this.old_image, 'old_image')
-
-      // this.old_image = {
-      //   ...this.old_image
-      // }
-
       this.user.password = '';
-
       this.$forceUpdate();
       this.loading = false;
     },
 
     async updateProfile(context) {
       const storage = getStorage();
-
       context.changeLoadingMessage('Updating User Profile');
+      // Updating user profile
       try {
-
         if (this.image) {
-          console.log(this.image,'image')
-          console.log(this.old_image.url, 'old_image');
-          if(this.old_image && this.old_image.url) {
+
+          if (this.old_image && this.old_image.url) {
             await this.deleteImageFromFirebase(storage, this.old_image.url);
           }
-
           await this.uploadImageToFirebase(storage, this.image, auth.currentUser.uid);
         }
 
-        console.log(this.user, 'final user')
         await this.users_service.update(this.user, auth.currentUser.uid);
 
         return true
       } catch (e) {
         context.reportError({
-          'title': 'Error while creating User',
-          'description': e.message,
+          'title': 'Error while updating User',
+          'description': 'Something went wrong while updating user.',
         })
-
         return false
       }
     },
 
     async updatePassword(context) {
-      context.changeLoadingMessage('Updating User Profile');
-      try {
-        let _local_user = getUser();
-        if(this.oldPassword !== _local_user.password) {
-          context.reportError({
-            'title': "Old password doesn't match, Please double check it",
-            'description': "Old password doesn't match, Please double check it",
-          })
 
-          return ;
+      context.changeLoadingMessage('Updating User Password!, please wait...');
+
+        if(this.oldPassword === this.user.password) {
+          context.reportError({
+            'title': "Error.",
+            'description': "Old password & New password couldn't be same.",
+          })
+          return false;
         }
+
+        // Sign in user with email & password
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, this.user.email, this.oldPassword)
+          const user = userCredential.user;
 
           // Updating password in firebase
           try {
             await updatePassword(auth.currentUser, this.user.password);
-            console.log('firebase auth password changed...');
-            await this.$router.push('/')
+
+            await this.users_service.update(this.user, auth.currentUser.uid);
+
+            this.db_user = await this.users_service.fetchOne(user.uid);
+
+            localStorage.clear()
+
+            localStorage.setItem('auth_token', user.accessToken)
+            localStorage.setItem('fb_auth_user', JSON.stringify(user))
+            localStorage.setItem('auth_user', JSON.stringify(this.db_user))
+
           } catch (error) {
-            console.log(error, error.message)
             context.reportError({
-              'title': 'Something went wrong while updating user!',
-              'description': error.message,
+              'title': 'Ops! Something went wrong.',
+              'description': 'Error occur while updating user password!',
             })
+            return false;
           }
 
-        await this.users_service.update(this.user, auth.currentUser.uid);
+        } catch (e) {
+          console.log(e)
+          context.reportError({
+            'title': "Error.",
+            'description': "Old password doesn't match, Please double check it",
+          })
+          return false;
+        }
 
         return true
-      } catch (e) {
-        context.reportError({
-          'title': 'Error while creating User',
-          'description': e.message,
-        })
-
-        return false
-      }
     },
 
     async reloadData() {
