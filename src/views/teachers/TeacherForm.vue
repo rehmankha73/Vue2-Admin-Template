@@ -173,8 +173,8 @@ export default {
           return true
         } catch (e) {
           context.reportError({
-            'title': 'Error while creating Teacher',
-            'description': e.message,
+            'title': 'Error while updating teacher',
+            'description': e.message ? e.message : 'Something went wrong while updating teacher',
           })
           return false
         }
@@ -201,7 +201,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while creating Teacher',
-            'description': e.message
+            'description': e.message ? e.message : 'Something went wrong while creating teacher'
           })
           return false
         }
@@ -264,84 +264,4 @@ p {
   font-weight: bold;
   text-align: left;
 }
-
-.icon {
-  position: absolute;
-  color:red;
-  top: 0;
-  right: 5px;
-}
-
-html, body {
-  height: 100%;
-  text-align: center;
-}
-
-.btn {
-  background-color: #d3394c;
-  border: 0;
-  color: #fff;
-  cursor: pointer;
-  display: inline-block;
-  font-weight: bold;
-  padding: 15px 35px;
-  position: relative;
-}
-
-.btn:hover {
-  background-color: #722040;
-}
-
-input[type="file"] {
-  position: absolute;
-  opacity: 0;
-  z-index: -1;
-}
-
-.align-center {
-  text-align: center;
-}
-
-.helper {
-  height: 100%;
-  display: inline-block;
-  vertical-align: middle;
-  width: 0;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.hidden.image {
-  display: inline-block !important;
-}
-
-.display-inline {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.img {
-  border: 1px solid #f6f6f6;
-  display: inline-block;
-  height: 200px;
-  width: 200px;
-  margin-left: -2px;
-  margin-top: -2px;
-  object-fit: contain;
-}
-
-.drop {
-  background-color: #f2f2f2;
-  border: 2px dashed #ccc;
-  border-radius: 2px;
-  height: 200px;
-  width: 200px;
-}
-
-.cursor-pointer{
-  cursor: pointer;
-}
-
 </style>

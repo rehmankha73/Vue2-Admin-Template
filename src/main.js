@@ -5,6 +5,14 @@ import router from './router';
 import axios from "axios";
 Vue.config.productionTip = false;
 import './assets/style.sass';
+import Toast from "vue-toastification";
+import "vue-toastification/dist/index.css";
+
+const options = {
+    // You can set your default options here
+    timeout: 4000,
+    position: 'bottom-left',
+};
 
 Vue.prototype.$axios = axios
 axios.defaults.baseURL = 'http://127.0.0.1:8000/api/'
@@ -44,9 +52,11 @@ axios.interceptors.response.use(
     }
 );
 
+Vue.use(Toast, options);
 
 new Vue({
     vuetify,
     router,
     render: (h) => h(App)
-}).$mount('#app');
+})
+    .$mount('#app');

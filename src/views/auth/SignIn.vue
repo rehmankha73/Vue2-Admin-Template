@@ -89,7 +89,6 @@ export default {
           description: 'Please provide username/email for processing!',
         };
         this.loading = false;
-        return false
       }
 
       try {

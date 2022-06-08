@@ -112,7 +112,7 @@ export default {
           return true
         } catch (e) {
           context.reportError({
-            'title': 'Error!',
+            'title': 'Error while updating class',
             'description': 'Something went wrong while updating class.'
           })
           return false
@@ -124,7 +124,7 @@ export default {
           return true
         } catch (e) {
           context.reportError({
-            'title': 'Error while creating Class',
+            'title': 'Error while creating class',
             'description': 'Something went wrong while creating class'
           })
           return false

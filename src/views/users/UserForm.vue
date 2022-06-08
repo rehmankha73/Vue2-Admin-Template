@@ -146,7 +146,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while updating User',
-            'description': e.message
+            'description': e.message ? e.message : 'Something went wrong while updating user'
           })
           return false
         }
@@ -162,8 +162,8 @@ export default {
 
           } catch (e) {
             context.reportError({
-              'title': "Something went wrong while creating new user, please try later!",
-              'description': e.message,
+              'title': "Something went wrong!",
+              'description': e.message ? e.message : "Couldn't create user, please try later!",
             })
             return false;
           }
@@ -177,7 +177,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while creating User',
-            'description': e.message
+            'description': e.message ? e.message : 'Something went wrong while creating user',
           })
           return false
         }

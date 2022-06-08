@@ -230,20 +230,20 @@ export default {
             localStorage.setItem('auth_token', user.accessToken)
             localStorage.setItem('fb_auth_user', JSON.stringify(user))
             localStorage.setItem('auth_user', JSON.stringify(this.db_user))
+            this.$toast.success('Password update successfully!')
 
           } catch (error) {
             context.reportError({
-              'title': 'Ops! Something went wrong.',
-              'description': 'Error occur while updating user password!',
+              'title': 'Something went wrong.',
+              'description': error.message ? error.message : 'Error occur while updating user password!',
             })
             return false;
           }
 
         } catch (e) {
-          console.log(e)
           context.reportError({
-            'title': "Error.",
-            'description': "Old password doesn't match, Please double check it",
+            'title': "Something went wrong!",
+            'description': e.message ? e.message : "Old password doesn't match, Please double check it",
           })
           return false;
         }
