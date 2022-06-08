@@ -11,7 +11,6 @@ export function dateValidation(value) {
 export const requiredWithZero = (value) =>
     (+value >= 0 && value !== '') || "You can't leave this field empty"
 
-
 export function requiredPercentage(message = "Percentage is not accurate!") {
     return (v) => !!v && v > 0 && v <= 100 || message
 }

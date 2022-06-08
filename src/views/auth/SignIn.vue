@@ -98,7 +98,7 @@ export default {
         this.error = true;
         this.errorVal = {
           title: 'Error',
-          description: 'Something went wrong while sending Password Sending Email!'
+          description: e.message ? e.message :'Something went wrong while sending Password Sending Email!'
         };
       }
       this.loading = false;
@@ -123,7 +123,7 @@ export default {
           this.error = true;
           this.errorVal = {
             title: 'Error while signing in',
-            description: 'Email or Password incorrect!'
+            description: e.message ? e.message : 'Email or Password incorrect!'
           };
         }
 

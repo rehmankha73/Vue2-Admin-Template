@@ -4,7 +4,7 @@
 
     <v-text-field
         v-model="class_data.room_no"
-        :rules="[required('A room_no must be provided')]"
+        :rules="[required('A Room # must be provided')]"
         class="span-2 mt-4"
         hint="Must be a unique Room #"
         label="Room #"
@@ -19,6 +19,7 @@
       <v-select
           v-model="class_data.teacher_id"
           item-value="value" item-text="text"
+          :rules="[required('Please select a teacher')]"
           :items="getTeacherDataItems()"
           label="Class In-charge Teacher"
           outlined
@@ -113,7 +114,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while updating class',
-            'description': 'Something went wrong while updating class.'
+            'description': e.message ? e.message : 'Something went wrong while updating class.'
           })
           return false
         }
@@ -125,7 +126,7 @@ export default {
         } catch (e) {
           context.reportError({
             'title': 'Error while creating class',
-            'description': 'Something went wrong while creating class'
+            'description': e.message ? e.message : 'Something went wrong while creating class'
           })
           return false
         }
