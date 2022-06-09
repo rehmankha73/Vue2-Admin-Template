@@ -1,7 +1,7 @@
 <template>
   <v-card>
     <v-card-title class="d-flex align-start">
-      <span class="title">
+      <span class="title text-center text-sm-left">
         {{ title }}
       </span>
 
@@ -10,12 +10,14 @@
       <div class="search-bar">
         <v-text-field
             v-model="search"
+            dense
             label="Search"
             placeholder="Search here..."
             solo
-            dense
         ></v-text-field>
       </div>
+
+      <slot name="additional_actions"/>
 
       <v-btn
           v-if="can_add_new_item"
@@ -26,35 +28,35 @@
         Add
       </v-btn>
 
-      <v-btn @click="refreshData" icon style="margin-left: 10px">
+      <v-btn icon style="margin-left: 10px" @click="refreshData">
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
     </v-card-title>
 
     <v-card-text>
       <v-data-table
+          :footer-props="getFooterOptions"
           :headers="headers"
           :items="items"
           :items-per-page="per_page_items"
-          :search="search"
           :loading="loading"
-          :footer-props="getFooterOptions"
-          item-key="name"
+          :search="search"
           class="elevation-0"
+          item-key="name"
       >
         <template #item="{ item }">
-          <tr>
+          <tr v-if="$vuetify.breakpoint.smAndUp">
             <td v-for="(head, key) in headers.filter( h => h.value !== 'actions')" :key="key">
-              <slot :name="head.value" :item="item">{{ item[head.value] }}</slot>
+              <slot :item="item" :name="head.value">{{ item[head.value] }}</slot>
             </td>
 
-            <td class="d-flex text-center" v-if="can_show_item || can_edit_item || can_delete_item">
-              <slot name="actions" :item="item">
+            <td v-if="can_show_item || can_edit_item || can_delete_item" class="d-flex">
+              <slot :item="item" name="actions">
                 <v-icon
                     v-if="can_show_item"
+                    class="mr-2"
                     color="blue"
                     small
-                    class="mr-2"
                     @click="$emit('showItem', item)"
                 >
                   mdi-eye
@@ -62,9 +64,9 @@
 
                 <v-icon
                     v-if="can_edit_item"
+                    class="mr-2"
                     color="green"
                     small
-                    class="mr-2"
                     @click="$emit('editItem', item)"
                 >
                   mdi-pencil
@@ -79,6 +81,58 @@
                   mdi-delete
                 </v-icon>
               </slot>
+            </td>
+          </tr>
+
+          <tr v-else class="v-data-table__mobile-table-row">
+            <td v-for="(head, key) in headers.filter(h => h.value !== 'actions')" :key="key"
+                class="v-data-table__mobile-row">
+                <span class="v-data-table__mobile-row__header">
+                  {{ head.text }}
+                </span>
+
+              <slot :item="item" :name="head.value" class="v-data-table__mobile-row__cell">
+                {{ item[head.value] }}
+              </slot>
+            </td>
+
+            <td v-if="can_show_item || can_edit_item || can_delete_item" class="v-data-table__mobile-row">
+                <span class="v-data-table__mobile-row__header">
+                  Actions
+                </span>
+
+              <div>
+                <slot :item="item" name="actions">
+                  <v-icon
+                      v-if="can_show_item"
+                      class="mr-2"
+                      color="blue"
+                      small
+                      @click="$emit('showItem', item)"
+                  >
+                    mdi-eye
+                  </v-icon>
+
+                  <v-icon
+                      v-if="can_edit_item"
+                      class="mr-2"
+                      color="green"
+                      small
+                      @click="$emit('editItem', item)"
+                  >
+                    mdi-pencil
+                  </v-icon>
+
+                  <v-icon
+                      v-if="can_delete_item"
+                      color="red"
+                      small
+                      @click="deleteItem(item)"
+                  >
+                    mdi-delete
+                  </v-icon>
+                </slot>
+              </div>
             </td>
           </tr>
         </template>
@@ -130,12 +184,14 @@ export default {
 
     headers: {
       type: Array,
-      default: () => {},
+      default: () => {
+      },
     },
 
     getDataFunction: {
       type: Function,
-      default: () => {},
+      default: () => {
+      },
     },
 
     // editHandler: {
@@ -160,88 +216,6 @@ export default {
       search: '',
       calories: '',
       items: [],
-      desserts: [
-        {
-          name: 'Frozen Yogurt',
-          calories: 159,
-          fat: 6.0,
-          carbs: 24,
-          protein: 4.0,
-          iron: '1%',
-        },
-        {
-          name: 'Ice cream sandwich',
-          calories: 237,
-          fat: 9.0,
-          carbs: 37,
-          protein: 4.3,
-          iron: '1%',
-        },
-        {
-          name: 'Eclair',
-          calories: 262,
-          fat: 16.0,
-          carbs: 23,
-          protein: 6.0,
-          iron: '7%',
-        },
-        {
-          name: 'Cupcake',
-          calories: 305,
-          fat: 3.7,
-          carbs: 67,
-          protein: 4.3,
-          iron: '8%',
-        },
-        {
-          name: 'Gingerbread',
-          calories: 356,
-          fat: 16.0,
-          carbs: 49,
-          protein: 3.9,
-          iron: '16%',
-        },
-        {
-          name: 'Jelly bean',
-          calories: 375,
-          fat: 0.0,
-          carbs: 94,
-          protein: 0.0,
-          iron: '0%',
-        },
-        {
-          name: 'Lollipop',
-          calories: 392,
-          fat: 0.2,
-          carbs: 98,
-          protein: 0,
-          iron: '2%',
-        },
-        {
-          name: 'Honeycomb',
-          calories: 408,
-          fat: 3.2,
-          carbs: 87,
-          protein: 6.5,
-          iron: '45%',
-        },
-        {
-          name: 'Donut',
-          calories: 452,
-          fat: 25.0,
-          carbs: 51,
-          protein: 4.9,
-          iron: '22%',
-        },
-        {
-          name: 'KitKat',
-          calories: 518,
-          fat: 26.0,
-          carbs: 65,
-          protein: 7,
-          iron: '6%',
-        },
-      ],
     }
   },
 
@@ -259,7 +233,7 @@ export default {
   methods: {
     checkActionsInHeader() {
       const arr = this.headers.filter(h => h.value === 'actions')
-      if(arr.length < 1) {
+      if (arr.length < 1) {
         this.headers.push({
           text: 'Actions',
           value: 'actions',
@@ -270,7 +244,7 @@ export default {
 
     deleteItem(item) {
       console.log(item)
-      if(confirm('Are you sure!')) {
+      if (confirm('Are you sure!')) {
         this.items.splice(this.items.indexOf(item), 1)
         this.$emit('deleteItem', item)
       }
@@ -300,8 +274,8 @@ export default {
   font-weight: bold
 }
 
-.search-bar{
-  width:400px;
+.search-bar {
+  width: 400px;
   margin-right: 20px;
 }
 </style>

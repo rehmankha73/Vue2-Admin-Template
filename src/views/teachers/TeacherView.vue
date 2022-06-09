@@ -17,6 +17,7 @@
         @editItem="edit"
         @deleteItem="deleteService"
     >
+
       <template #image="{ item }">
         <v-avatar>
           <v-img
@@ -28,7 +29,6 @@
       </template>
 
     </custom-data-table>
-
 
     <!--    <data-table-->
     <!--        :allow-add="true"-->
