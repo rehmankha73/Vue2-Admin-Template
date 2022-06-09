@@ -13,7 +13,9 @@
           hide-details
         />
       </div>
+
       <slot name="primary-action" />
+
       <v-btn
         v-if="allowAdd"
         color="primary"

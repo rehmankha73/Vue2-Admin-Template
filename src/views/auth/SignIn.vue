@@ -94,6 +94,7 @@ export default {
       try {
         this.loading = true;
         await sendPasswordResetEmail(auth, this.username)
+        this.$toast.success('Password Reset Request sent successfully!')
       } catch (e) {
         this.error = true;
         this.errorVal = {
@@ -126,7 +127,6 @@ export default {
             description: e.message ? e.message : 'Email or Password incorrect!'
           };
         }
-
         this.loading = false;
       }
     }

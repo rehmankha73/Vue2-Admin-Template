@@ -77,10 +77,9 @@ router.beforeEach((to, __, next) => {
         if (to.path !== '/auth/sign-in' && !allow_routes.includes(to.path)) {
             next('/auth/sign-in')
         }
-    }
-    else {
+    } else {
         let _u = JSON.parse(localStorage.getItem('fb_auth_user'));
-        if(!_u.emailVerified && to.path !== '/auth/email-verification') {
+        if (!_u.emailVerified && to.path !== '/auth/email-verification') {
             next('/auth/email-verification')
         }
     }
