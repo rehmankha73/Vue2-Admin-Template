@@ -1,10 +1,11 @@
 <template>
   <div>
-    <custom-data-table
+    <r-data-table
         :can_add_new_item="true"
         :can_show_item="true"
         :can_edit_item="true"
         :can_delete_item="true"
+        :can_filter="true"
 
         :getDataFunction="loadData"
         :headers="headers"
@@ -18,6 +19,17 @@
         @deleteItem="deleteService"
     >
 
+      <template #other_actions="{ item }">
+        <v-icon
+            class="mr-2"
+            color="blue"
+            small
+        >
+          mdi-message {{ item }}
+        </v-icon>
+
+      </template>
+
       <template #image="{ item }">
         <v-avatar>
           <v-img
@@ -27,8 +39,28 @@
           ></v-img>
         </v-avatar>
       </template>
+    </r-data-table>
 
-    </custom-data-table>
+<!--    <n-data-table-->
+<!--        :allowAdd="true"-->
+<!--        :allowFilters="true"-->
+<!--        title="Teachers"-->
+<!--        :loader="loadData"-->
+<!--        :headers="headers"-->
+<!--        :editHandler="edit"-->
+<!--        :view-handler="view"-->
+<!--        :deletHandler="deleteService"-->
+<!--    >-->
+<!--      <template #image="{ item }">-->
+<!--        <v-avatar>-->
+<!--          <v-img-->
+<!--              :src="item.image"-->
+<!--              max-height="150"-->
+<!--              max-width="250"-->
+<!--          ></v-img>-->
+<!--        </v-avatar>-->
+<!--      </template>-->
+<!--    </n-data-table>-->
 
     <!--    <data-table-->
     <!--        :allow-add="true"-->
@@ -67,12 +99,16 @@
 
 <script>
 import dayjs from 'dayjs';
-// import DataTable from '../../components/DataTable';
 import {TeachersService} from "@/services/teachers-service";
-import CustomDataTable from "@/components/CustomDataTable";
+// import DataTable from '../../components/DataTable';
+import RDataTable from "@/components/RDataTable";
+// import NDataTable from "@/components/NDataTable";
 
 export default {
-  components: {CustomDataTable},
+  components: {
+    // NDataTable,
+    RDataTable
+  },
 
   data: () => ({
     new_roll_no: '',

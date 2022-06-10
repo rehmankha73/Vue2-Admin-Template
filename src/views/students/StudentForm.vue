@@ -1,93 +1,103 @@
 <template>
-  <SimpleForm :onSubmit="submit" @done="$router.back()">
-    <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
+  <!--  <SimpleForm :onSubmit="submit" @done="$router.back()">-->
+  <r-form :onSubmit="submit" @done="$router.back()">
+    <template #main><p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
-    <image-upload
-        :image_obj="old_image"
-        @uploadedImage="getUploadedImage"
-    />
+      <image-upload
+          :image_obj="old_image"
+          @uploadedImage="getUploadedImage"
+      />
 
-    <v-text-field
-        disabled
-        v-model="student.roll_no"
-        :rules="[required('A roll_no must be provided')]"
-        class="span-2 mt-4"
-        hint="Must be a unique Roll #"
-        label="Roll #"
-        outlined
-        persistent-hint
-        type="number"
-    />
-
-    <div class="d-flex span-2">
-      <v-select
-          v-model="student.class_id"
-          item-value="value" item-text="text"
-          :items="getClassesItems()"
-          :rules="[required('A class must be provided')]"
-          label="Class"
-          hint="Select Class from the following"
-          persistent-hint
+      <v-text-field
+          readonly
+          v-model="student.roll_no"
+          :rules="[required('A roll_no must be provided')]"
+          class="span-2 mt-4"
+          hint="Must be a unique Roll #"
+          label="Roll #"
           outlined
-      ></v-select>
-    </div>
+          persistent-hint
+          type="number"
+      />
 
-    <v-text-field
-        v-model="student.name"
-        :rules="[required('A name must be provided')]"
-        class="span-2"
-        hint="Must be a authentic Name"
-        label="Name"
-        outlined
-        persistent-hint
-    />
+      <div class="d-flex span-2">
+        <v-select
+            v-model="student.class_id"
+            :items="getClassesItems()" :rules="[required('A class must be provided')]"
+            hint="Select Class from the following"
+            item-text="text"
+            item-value="value"
+            label="Class"
+            outlined
+            persistent-hint
+        ></v-select>
+      </div>
 
-    <v-text-field
-        v-model="student.email"
-        :rules="[required('A email must be provided')]"
-        class="span-2"
-        hint="Must be a authentic and unique email/"
-        label="Email"
-        outlined
-        persistent-hint
-    />
+      <v-text-field
+          v-model="student.name"
+          :rules="[required('A name must be provided')]"
+          class="span-2"
+          hint="Must be a authentic Name"
+          label="Name"
+          outlined
+          persistent-hint
+      />
 
-    <v-text-field
-        v-model="student.phone"
-        :rules="[required('A Phone must be provided')]"
-        class="span-2"
-        hint="Must be a authentic Phone Number."
-        label="Phone"
-        outlined
-        persistent-hint
-    />
+      <v-text-field
+          v-model="student.email"
+          :rules="[required('A email must be provided')]"
+          class="span-2"
+          hint="Must be a authentic and unique email/"
+          label="Email"
+          outlined
+          persistent-hint
+      />
 
-    <v-text-field
-        v-model="student.address"
-        :rules="[required('Address must be provided')]"
-        class="span-2"
-        hint="Must be a authentic address"
-        label="Address"
-        outlined
-        persistent-hint
-    />
+      <v-text-field
+          v-model="student.phone"
+          :rules="[required('A Phone must be provided')]"
+          class="span-2"
+          hint="Must be a authentic Phone Number."
+          label="Phone"
+          outlined
+          persistent-hint
+      />
 
-    <loading-dialog v-model="loading" message="Fetching Student Data"/>
-  </SimpleForm>
+      <v-text-field
+          v-model="student.address"
+          :rules="[required('Address must be provided')]"
+          class="span-2"
+          hint="Must be a authentic address"
+          label="Address"
+          outlined
+          persistent-hint
+      />
+
+
+      <loading-dialog v-model="loading" message="Fetching Student Data"/>
+    </template>
+
+  </r-form>
+  <!--  </SimpleForm>-->
 </template>
 
 <script>
-import SimpleForm from '../../components/Form';
-import { StudentsService } from '@/services/students-service';
-import { ClassesService } from "@/services/classes-service";
+// import SimpleForm from '../../components/RForm';
+import RForm from '../../components/RForm';
+import {StudentsService} from '@/services/students-service';
+import {ClassesService} from "@/services/classes-service";
 import LoadingDialog from '../../components/LoadingDialog';
 import { required } from '@/utils/validators';
-import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes, getStorage } from "firebase/storage";
 import ImageUpload from "@/components/ImageUpload";
 
 export default {
   name: 'Form',
-  components: {ImageUpload, LoadingDialog, SimpleForm},
+  components: {
+    LoadingDialog,
+    ImageUpload,
+    RForm
+  },
 
   data: () => ({
     image: null,
@@ -121,6 +131,9 @@ export default {
 
   methods: {
     required,
+    onSuccess() {
+      console.log('Form submitted successfully!')
+    },
 
     getUploadedImage(_image_obj) {
       this.image = _image_obj.file;
@@ -128,7 +141,9 @@ export default {
 
     getClassesItems() {
       let _data = [];
-      this.class_data.forEach((c) => { _data.push({ value: c.id, text: c.title}) })
+      this.class_data.forEach((c) => {
+        _data.push({value: c.id, text: c.title})
+      })
       return _data;
     },
 
@@ -149,6 +164,9 @@ export default {
     },
 
     async submit(context) {
+      console.log('submit')
+      console.log(context)
+
       const storage = getStorage();
 
       if (this.isEdit) {
@@ -190,7 +208,7 @@ export default {
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
-      const storageRef = ref(storage, _id+'_'+_file.name);
+      const storageRef = ref(storage, _id + '_' + _file.name);
 
       await uploadBytes(storageRef, _file).then(async (snapshot) => {
         console.log(snapshot, 'snapshot')

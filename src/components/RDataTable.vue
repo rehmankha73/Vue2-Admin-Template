@@ -1,26 +1,31 @@
 <template>
   <v-card>
-    <v-card-title class="d-flex align-start">
-      <span class="title text-center text-sm-left">
+    <v-card-title :class="$vuetify.breakpoint.smAndDown ? 'd-flex flex-column justify-center align-center' : '' ">
+      <span :class="$vuetify.breakpoint.smAndDown ? 'data-table__header mb-2 text-center d-block' : 'data-table__header d-inline'"
+            :style="$vuetify.breakpoint.smAndDown ? 'width: 100%' : ''"
+      >
         {{ title }}
       </span>
 
       <v-spacer/>
 
-      <div class="search-bar">
+      <div
+          :style="$vuetify.breakpoint.smAndDown ? 'width: 400px; max-width: 100%; margin-bottom: 10px' : 'width: 400px; margin-right: 20px; max-width: 100%'"
+      >
         <v-text-field
             v-model="search"
             dense
             label="Search"
             placeholder="Search here..."
             solo
+            hide-details
         ></v-text-field>
       </div>
 
       <slot name="additional_actions"/>
 
       <v-btn
-          v-if="can_add_new_item"
+          v-if="can_add_new_item && !$vuetify.breakpoint.smAndDown"
           color="primary"
           @click="$emit('AddNewItem')"
       >
@@ -28,11 +33,30 @@
         Add
       </v-btn>
 
-      <v-btn icon style="margin-left: 10px" @click="refreshData">
+      <v-btn
+          v-else-if="can_add_new_item"
+          color="primary"
+          elevation="0"
+          width="100%"
+          class="mb-2"
+          @click="$emit('add-new')"
+      >
+        <v-icon class="v-btn__pre-icon" small>mdi-plus</v-icon>&nbsp; Add New
+      </v-btn>
+
+      <v-btn v-if="!$vuetify.breakpoint.smAndDown" icon style="margin-left: 10px" @click="loadData">
         <v-icon>mdi-refresh</v-icon>
       </v-btn>
-    </v-card-title>
+      <v-btn v-else outlined id="refresh" class="refresh" color="primary" elevation="0" width="100%" @click="loadData">
+        <v-icon small class="mr-2">mdi-refresh</v-icon>
+        Reload
+      </v-btn>
 
+      <v-btn v-if="can_filter" icon style="margin-left: 10px">
+        <v-icon>mdi-filter</v-icon>
+      </v-btn>
+
+    </v-card-title>
     <v-card-text>
       <v-data-table
           :footer-props="getFooterOptions"
@@ -51,8 +75,10 @@
             </td>
 
             <td v-if="can_show_item || can_edit_item || can_delete_item" class="d-flex">
-              <slot :item="item" name="actions">
-                <v-icon
+
+              <slot :item="item" name="other_actions"></slot>
+
+              <v-icon
                     v-if="can_show_item"
                     class="mr-2"
                     color="blue"
@@ -80,7 +106,6 @@
                 >
                   mdi-delete
                 </v-icon>
-              </slot>
             </td>
           </tr>
 
@@ -139,13 +164,15 @@
 
       </v-data-table>
     </v-card-text>
-
+    <error-dialog v-model="error" :error="errorValue" />
   </v-card>
 </template>
 
 <script>
+import ErrorDialog from './ErrorDialog'
 
 export default {
+  components: { ErrorDialog },
   props: {
     title: {
       type: String,
@@ -182,6 +209,11 @@ export default {
       default: false,
     },
 
+    can_filter: {
+      type: Boolean,
+      default: false,
+    },
+
     headers: {
       type: Array,
       default: () => {
@@ -193,26 +225,13 @@ export default {
       default: () => {
       },
     },
-
-    // editHandler: {
-    //   type: Function,
-    //   default: () => {},
-    // },
-    //
-    // deleteHandler: {
-    //   type: Function,
-    //   default: () => {},
-    // },
-    //
-    // showHandler: {
-    //   type: Function,
-    //   default: () => {},
-    // },
   },
 
   data() {
     return {
       loading: false,
+      error: false,
+      errorValue: {},
       search: '',
       calories: '',
       items: [],
@@ -252,18 +271,17 @@ export default {
 
     async loadData() {
       this.loading = true;
-
-      this.items = await this.getDataFunction();
-
-      this.loading = false;
-    },
-
-    async refreshData() {
-      this.loading = true;
-
-      this.items = await this.getDataFunction();
-
-      this.loading = false;
+      try {
+        this.items = await this.getDataFunction();
+        this.loading = false;
+      } catch (e) {
+        this.error = true;
+        this.errorValue = {
+          title: 'Error while loading data',
+          description: e?.response?.data?.error ?? 'Some Error occurred'
+        }
+        this.loading = false;
+      }
     },
   },
 }
