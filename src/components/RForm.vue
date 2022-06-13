@@ -6,7 +6,7 @@
 
     <div class="form__actions">
 
-      <slot :context="context" name="actions"/>
+      <slot name="actions" :context="context"/>
 
       <v-btn
           color="primary"

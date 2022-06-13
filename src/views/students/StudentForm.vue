@@ -73,8 +73,12 @@
           persistent-hint
       />
 
-
       <loading-dialog v-model="loading" message="Fetching Student Data"/>
+
+
+    </template>
+    <template #actions>
+      <v-btn @click="showToast">show toast</v-btn>
     </template>
 
   </r-form>
@@ -90,13 +94,14 @@ import LoadingDialog from '../../components/LoadingDialog';
 import { required } from '@/utils/validators';
 import { deleteObject, getDownloadURL, ref, uploadBytes, getStorage } from "firebase/storage";
 import ImageUpload from "@/components/ImageUpload";
+import { showToast } from '@/assets/toast';
 
 export default {
   name: 'Form',
   components: {
     LoadingDialog,
     ImageUpload,
-    RForm
+    RForm,
   },
 
   data: () => ({
@@ -131,10 +136,9 @@ export default {
 
   methods: {
     required,
-    onSuccess() {
-      console.log('Form submitted successfully!')
+    showToast() {
+      showToast( 'warning', 'Student created successfully!')
     },
-
     getUploadedImage(_image_obj) {
       this.image = _image_obj.file;
     },
