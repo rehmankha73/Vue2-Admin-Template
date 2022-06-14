@@ -5,6 +5,8 @@ import router from './router';
 import axios from "axios";
 Vue.config.productionTip = false;
 import './assets/style.sass';
+import './assets/toast.css';
+
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
 
