@@ -3,6 +3,7 @@ import VueRouter from 'vue-router';
 import NotFound from './views/404.vue';
 import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
+import Media from './views/Media.vue'
 import UserProfile from "@/views/settings/UserProfile";
 
 import {usersRouter} from './views/users/router';
@@ -22,6 +23,11 @@ const routes = [
             {
                 path: '/',
                 component: Home
+            },
+            {
+                path: '/media-picker',
+                name: 'media-picker',
+                component: Media,
             },
             {
                 path: 'user-profile',
