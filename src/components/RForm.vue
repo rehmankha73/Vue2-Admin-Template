@@ -17,7 +17,7 @@
       </v-btn>
     </div>
     <loading-dialog v-model="loading" :message="loadingMessage"/>
-    <error-dialog v-model="hasError" :message="errors"/>
+    <error-dialog v-model="hasError" :error="errors"/>
   </v-card>
 </template>
 
@@ -49,7 +49,7 @@ export default {
     this.context.validate = this.$refs.form.validate
     this.context.setLoading = this.setLoading
     this.context.changeLoadingMessage = this.changeLoadingMessage
-    this.context.errorReport = this.reportError
+    this.context.reportError = this.reportError
   },
 
   methods: {
@@ -67,15 +67,11 @@ export default {
     },
 
     async submit() {
-      console.log(this.$refs.form.validate());
       if (this.$refs.form.validate()) {
-        console.log('validate')
         this.setLoading(true)
         if (await this.onSubmit(this.context)) {
           this.$refs.form.reset();
           this.$emit('done')
-        } else {
-          console.log('not validate')
         }
         this.setLoading(false)
       }

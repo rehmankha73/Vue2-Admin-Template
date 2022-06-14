@@ -1,9 +1,12 @@
 <template>
-  <!--  <SimpleForm :onSubmit="submit" @done="$router.back()">-->
+<!--    <SimpleForm :onSubmit="submit" @done="$router.back()">-->
   <r-form :onSubmit="submit" @done="$router.back()">
-    <template #main><p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
+    <template #main>
+      <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
       <image-upload
+          :isFormSubmitted="isFormSubmitted"
+          :isEdit="isEdit"
           :image_obj="old_image"
           @uploadedImage="getUploadedImage"
       />
@@ -75,18 +78,17 @@
 
       <loading-dialog v-model="loading" message="Fetching Student Data"/>
 
-
     </template>
     <template #actions>
       <v-btn @click="showToast">show toast</v-btn>
     </template>
 
   </r-form>
-  <!--  </SimpleForm>-->
+<!--    </SimpleForm>-->
 </template>
 
 <script>
-// import SimpleForm from '../../components/RForm';
+// import SimpleForm from '../../components/Form';
 import RForm from '../../components/RForm';
 import {StudentsService} from '@/services/students-service';
 import {ClassesService} from "@/services/classes-service";
@@ -101,12 +103,14 @@ export default {
   components: {
     LoadingDialog,
     ImageUpload,
+    // SimpleForm
     RForm,
   },
 
   data: () => ({
     image: null,
     old_image: null,
+    isFormSubmitted: false,
     isEdit: false,
     loading: false,
     showPassword: false,
@@ -137,8 +141,9 @@ export default {
   methods: {
     required,
     showToast() {
-      showToast( 'warning', 'Student created successfully!')
+      showToast( 'success', 'Student created successfully!')
     },
+
     getUploadedImage(_image_obj) {
       this.image = _image_obj.file;
     },
@@ -168,9 +173,6 @@ export default {
     },
 
     async submit(context) {
-      console.log('submit')
-      console.log(context)
-
       const storage = getStorage();
 
       if (this.isEdit) {
@@ -190,6 +192,7 @@ export default {
           return false
         }
       } else {
+        this.isFormSubmitted = true;
         context.changeLoadingMessage('Creating A New Student');
         try {
           let _id = this.getRandomId();
@@ -197,6 +200,12 @@ export default {
           // image uploads
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, _id);
+          } else {
+            context.reportError({
+              'title': 'Error while creating Student',
+              'description': 'Image is required while creating student!'
+            })
+            return false
           }
 
           await this.students_service.create(this.student, _id);

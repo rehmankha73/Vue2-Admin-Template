@@ -1,15 +1,22 @@
 <template>
-  <div class="drop mb-4" @drop="onDrop" @dragover.prevent>
-    <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
-    <div v-if="!(image && image.url)" class="mx-4 cursor-pointer" style="margin-top: 80px"
-         @click="$refs['file-input'].click();">
-      + Select/Drop Image
-    </div>
+  <div>
+    <div class="drop mb-4"
+         :class="[hasErrors ? 'invalid' : 'valid']"
+         @drop="onDrop"
+         @dragover.prevent
+    >
+      <input ref="file-input" name="image" style="display: none;" type="file" @change="onChange">
+      <div v-if="!(image && image.url)" class="mx-4 cursor-pointer" style="margin-top: 80px"
+           @click="$refs['file-input'].click();">
+        + Select/Drop Image
+      </div>
 
-    <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
-      <img :src="image.url" alt="" class="img"/>
-      <button class="icon" @click="removeFile">X</button>
+      <div v-else class="d-flex align-start" style="position: relative" v-bind:class="{ 'image': true }">
+        <img :src="image.url" alt="" class="img"/>
+        <button class="icon" @click="removeFile">X</button>
+      </div>
     </div>
+    <span style="color:red" v-if="hasErrors">{{ errorMessage }}</span>
   </div>
 </template>
 
@@ -17,15 +24,39 @@
 export default {
   name: "ImageUpload",
   props: {
+    rules: {
+      type: Array,
+      default: () => []
+    },
     image_obj: {
       type: Object,
       default: () => {},
+    },
+    isEdit: {
+      type: Boolean,
+      default: false
+    },
+    isFormSubmitted: {
+      type: Boolean,
+      default: false
     }
   },
 
   data() {
     return {
       image: null,
+      errorMessage: '',
+    }
+  },
+
+  computed: {
+    hasErrors() {
+      if(!this.isEdit && this.isFormSubmitted && !this.image) {
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.errorMessage = 'Image is required!'
+        return true
+      }
+      return false;
     }
   },
 
@@ -94,6 +125,14 @@ html, body {
   text-align: center;
 }
 
+.invalid{
+  border: 2px dashed red;
+}
+
+.valid {
+  border: 2px dashed #ccc;
+}
+
 .btn {
   background-color: #d3394c;
   border: 0;
@@ -151,7 +190,6 @@ input[type="file"] {
 
 .drop {
   background-color: #f2f2f2;
-  border: 2px dashed #ccc;
   border-radius: 2px;
   height: 200px;
   width: 200px;

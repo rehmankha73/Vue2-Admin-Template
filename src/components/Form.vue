@@ -61,6 +61,7 @@ export default {
       this.loadingMessage = message;
     },
     reportError(error) {
+      console.log(error, 'error_obj')
       this.error = true;
       this.errorVal = error;
     },
