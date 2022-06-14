@@ -6,7 +6,6 @@
 
       <image-upload
           :isFormSubmitted="isFormSubmitted"
-          :isEdit="isEdit"
           :image_obj="old_image"
           @uploadedImage="getUploadedImage"
       />
@@ -176,11 +175,18 @@ export default {
       const storage = getStorage();
 
       if (this.isEdit) {
+        this.isFormSubmitted = true
         context.changeLoadingMessage('Updating Student');
         try {
           if (this.image) {
             await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
+          } else {
+            context.reportError({
+              'title': 'Error!',
+              'description': 'Image is required while creating student!'
+            })
+            return false
           }
           await this.students_service.update(this.student, this.$route.query.id);
           return true

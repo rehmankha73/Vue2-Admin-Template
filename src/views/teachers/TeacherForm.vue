@@ -3,6 +3,7 @@
     <p class="span-2 form__title">{{ isEdit ? 'Update Teacher' : 'Create New Teacher' }}</p>
 
     <image-upload
+        :isFormSubmitted="isFormSubmitted"
         :image_obj="old_image"
         @uploadedImage="getUploadedImage"
     />
@@ -108,6 +109,7 @@ export default {
   data: () => ({
     image: null,
     old_image: null,
+    isFormSubmitted: false,
     isEdit: false,
     loading: false,
     showPassword: false,
@@ -154,6 +156,7 @@ export default {
       const storage = getStorage();
 
       if (this.isEdit) {
+        this.isFormSubmitted = true
         context.changeLoadingMessage('Updating Teacher');
         try {
           if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
@@ -167,6 +170,12 @@ export default {
           if (this.image) {
             await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
+          } else {
+            context.reportError({
+              'title': 'Error!',
+              'description': 'Image is required while creating teacher!'
+            })
+            return false
           }
 
           await this.teachers_service.update(this.teacher, this.$route.query.id);
@@ -179,6 +188,7 @@ export default {
           return false
         }
       } else {
+        this.isFormSubmitted = true
         context.changeLoadingMessage('Creating A New Teacher');
         try {
           if(this.teacher.date_of_leaving && (this.teacher.date_of_joining > this.teacher.date_of_leaving)) {
@@ -194,6 +204,12 @@ export default {
           // image uploads
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, _id);
+          } else {
+            context.reportError({
+              'title': 'Error!',
+              'description': 'Image is required while creating student!'
+            })
+            return false
           }
 
           await this.teachers_service.create(this.teacher, _id);

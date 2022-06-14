@@ -4,6 +4,7 @@
     <p class="span-2 form__title">{{ isEdit ? 'Update User' : 'Create New User' }}</p>
 
     <image-upload
+        :isFormSubmitted="isFormSubmitted"
         :image_obj="old_image"
         @uploadedImage="getUploadedImage"
     />
@@ -78,7 +79,6 @@ import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {createUserWithEmailAndPassword} from "firebase/auth";
 import {auth} from '@/firebase_config'
-import {getUser} from '@/utils/local';
 import ImageUpload from "@/components/ImageUpload";
 
 export default {
@@ -87,6 +87,7 @@ export default {
 
   data: () => ({
     is_mounted: false,
+    isFormSubmitted: false,
     image: null,
     old_image: null,
     isEdit: false,
@@ -107,13 +108,11 @@ export default {
 
   mounted() {
     this.loadUser();
-    this.auth_user = getUser() ? getUser() : null;
-
+    this.auth_user = null;
   },
 
   methods: {
     required,
-
     getUploadedImage(_image_obj) {
       this.image = _image_obj.file;
     },
@@ -134,11 +133,18 @@ export default {
       const storage = getStorage();
 
       if (this.isEdit) {
+        this.isFormSubmitted = true
         context.changeLoadingMessage('Updating User');
         try {
           if (this.image) {
             await this.deleteImageFromFirebase(storage, this.old_image.url);
             await this.uploadImageToFirebase(storage, this.image, this.$route.query.id);
+          } else {
+            context.reportError({
+              'title': 'Error!',
+              'description': 'Image is required while creating user!'
+            })
+            return false
           }
 
           await this.users_service.update(this.user, this.$route.query.id);
@@ -151,25 +157,34 @@ export default {
           return false
         }
       } else {
+        this.isFormSubmitted = true;
         context.changeLoadingMessage('Creating A New User');
         try {
-
+          console.log(this.auth_user)
           // creating new user with email & password
-          try {
-            const credentials = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
-            // Signed in
-            this.auth_user = credentials.user;
+          if (!this.auth_user) {
+            try {
+              const credentials = await createUserWithEmailAndPassword(auth, this.user.email, this.user.password)
+              // Signed in
+              this.auth_user = credentials.user;
 
-          } catch (e) {
-            context.reportError({
-              'title': "Something went wrong!",
-              'description': e.message ? e.message : "Couldn't create user, please try later!",
-            })
-            return false;
+            } catch (e) {
+              context.reportError({
+                'title': "Something went wrong!",
+                'description': e.message ? e.message : "Couldn't create user, please try later!",
+              })
+              return false;
+            }
           }
 
           if (this.image) {
             await this.uploadImageToFirebase(storage, this.image, this.auth_user.uid);
+          } else {
+            context.reportError({
+              'title': 'Error!',
+              'description': 'Image is required while creating user!'
+            })
+            return false
           }
 
           await this.users_service.create(this.user, this.auth_user.uid);

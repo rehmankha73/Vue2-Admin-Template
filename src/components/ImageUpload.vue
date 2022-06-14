@@ -32,10 +32,6 @@ export default {
       type: Object,
       default: () => {},
     },
-    isEdit: {
-      type: Boolean,
-      default: false
-    },
     isFormSubmitted: {
       type: Boolean,
       default: false
@@ -51,7 +47,7 @@ export default {
 
   computed: {
     hasErrors() {
-      if(!this.isEdit && this.isFormSubmitted && !this.image) {
+      if(this.isFormSubmitted && !this.image) {
         // eslint-disable-next-line vue/no-side-effects-in-computed-properties
         this.errorMessage = 'Image is required!'
         return true
