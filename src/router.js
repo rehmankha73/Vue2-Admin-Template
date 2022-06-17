@@ -3,7 +3,7 @@ import VueRouter from 'vue-router';
 import NotFound from './views/404.vue';
 import Dashboard from './components/Dashboard';
 import Home from './views/home.vue'
-import Media from './views/Media.vue'
+import Media from './views/media/Media.vue'
 import UserProfile from "@/views/settings/UserProfile";
 
 import {usersRouter} from './views/users/router';
@@ -12,6 +12,7 @@ import {studentsRouter} from "@/views/students/router";
 import {teachersRouter} from "@/views/teachers/router";
 import {authRouter} from "@/views/auth/router";
 import EmailVerification from "@/views/auth/EmailVerification";
+import {mediaRouter} from "@/views/media/router";
 
 Vue.use(VueRouter);
 
@@ -38,6 +39,7 @@ const routes = [
             ...studentsRouter,
             ...classesRouter,
             ...teachersRouter,
+            ...mediaRouter,
         ]
     },
     {

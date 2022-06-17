@@ -74,7 +74,7 @@
               <slot :item="item" :name="head.value">{{ item[head.value] }}</slot>
             </td>
 
-            <td v-if="can_show_item || can_edit_item || can_delete_item" class="d-flex">
+            <td v-if="can_show_item || can_edit_item || can_delete_item">
 
               <slot :item="item" name="other_actions"></slot>
 

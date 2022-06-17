@@ -103,7 +103,7 @@ export default {
           isVisible: true
         },
         {
-          to: '/media-picker',
+          to: '/media',
           title: 'Media',
           icon: 'mdi-image-multiple',
           isVisible: true

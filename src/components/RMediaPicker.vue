@@ -58,6 +58,13 @@ export default {
     return {
       uploaded_files: 0,
       files: [],
+      removed_files: [],
+    }
+  },
+  props: {
+  old_files: {
+      type: Array,
+      default: () => [],
     }
   },
   watch: {
@@ -65,6 +72,11 @@ export default {
       handler(newVal) {
         this.uploaded_files = newVal.length
         this.$emit('uploadedFiles', this.files)
+      }, deep: true,
+    },
+    removed_files: {
+      handler() {
+        this.$emit('removedFiles', this.removed_files)
       }, deep: true,
     }
   },
@@ -84,7 +96,15 @@ export default {
     },
 
     removeImage(index) {
+      if(this.old_files && this.old_files.length > 0) {
+        this.removed_files.push(this.files[index]);
+      }
       this.files.splice(index, 1)
+    }
+  },
+  mounted() {
+    if(this.old_files && this.old_files.length > 0) {
+      this.files = this.old_files
     }
   }
 }
