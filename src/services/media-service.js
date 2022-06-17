@@ -1,5 +1,5 @@
 import {collection, deleteDoc, doc, getDoc, getDocs, setDoc} from "firebase/firestore/lite";
-import { db } from "@/firebase_config";
+import {db} from "@/firebase_config";
 import {deleteObject, getStorage, ref} from "firebase/storage";
 
 export class MediaService {
@@ -27,7 +27,7 @@ export class MediaService {
         }
     }
 
-    async create(_payload,_id) {
+    async create(_payload, _id) {
         await setDoc(doc(db, "media", _id), _payload);
     }
 
@@ -37,14 +37,14 @@ export class MediaService {
     }
 
     async delete(media) {
-        if(media.image) {
-            const desertRef = ref(getStorage(), media.image);
-
-            deleteObject(desertRef).then(() => {
-                // File deleted successfully
-            }).catch((error) => {
-                console.log(error, 'error')
-            });
+        if (media.files && media.files.length > 0) {
+            for (let i = 0; i < media.files.length; i++) {
+                try {
+                    await deleteObject(ref(getStorage(), media.files[i].url))
+                } catch (error) {
+                    console.log(error, 'error')
+                }
+            }
         }
 
         await deleteDoc(doc(db, "media", media.id));

@@ -80,12 +80,12 @@ export default {
     },
 
     async deleteImageFromFirebase(file_url) {
-      const desertRef = ref(getStorage(), file_url);
-      deleteObject(desertRef).then(() => {
+      try {
+        await deleteObject(ref(getStorage(), file_url));
         console.log('File deleted successfully')
-      }).catch((error) => {
+      } catch (error) {
         console.log(error, 'error')
-      });
+      }
     },
 
     async loadData() {
@@ -93,9 +93,7 @@ export default {
       this.isEdit = true;
       this.loading = true;
       const _data = await this.media_service.fetchOne(this.$route.query.id);
-
       this.old_files = _data.files
-
       this.loading = false;
     },
 

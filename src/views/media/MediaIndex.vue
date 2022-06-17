@@ -4,6 +4,7 @@
         :can_add_new_item="true"
         :can_filter="true"
         :can_edit_item="true"
+        :can_delete_item="true"
 
         :getDataFunction="loadData"
         :headers="headers"
@@ -13,6 +14,7 @@
 
         @AddNewItem="addNew"
         @editItem="edit"
+        @deleteItem="deleteItem"
     >
       <template #files="{ item }">
         <v-avatar v-for="(image, key) in item.files" :key="key" style="margin-right: 10px; margin-top: 10px;margin-bottom: 10px">
@@ -71,13 +73,9 @@ export default {
       this.$router.push(`/media-picker?id=${item.id}`);
     },
 
-    // view(item) {
-    //   this.$router.push(`/teacher-details?id=${item.id}`);
-    // },
-
-    // async deleteService(item) {
-    //   await this.media_service.delete(item)
-    // },
+    async deleteItem(item) {
+      await this.media_service.delete(item)
+    },
 
     async loadData() {
       return await this.media_service.fetchAll()
