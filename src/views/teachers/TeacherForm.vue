@@ -225,30 +225,19 @@ export default {
     },
 
     async uploadImageToFirebase(storage, _file, _id) {
-      const storageRef = ref(storage, _id+'_'+_file.name);
-
-      await uploadBytes(storageRef, _file).then(async (snapshot) => {
-        console.log(snapshot, 'snapshot')
-
-        await getDownloadURL(storageRef)
-            .then((url) => {
-              console.log(url, 'url')
-              this.teacher.image = url;
-            })
-            .catch((error) => {
-              console.log(error, 'error')
-            });
-
-      }).catch(e => {
-        console.log(e)
-      });
+      const storageRef = ref(storage, _id + '_' + _file.name);
+      try {
+        await uploadBytes(storageRef, _file)
+        this.teacher.image = await getDownloadURL(storageRef);
+      } catch (e) {
+        console.log(e, 'Error occurred while uploading image!')
+      }
     },
 
     async deleteImageFromFirebase(storage, file_url) {
       const desertRef = ref(storage, file_url);
-
       deleteObject(desertRef).then(() => {
-        // File deleted successfully
+        console.log('File deleted successfully')
       }).catch((error) => {
         console.log(error, 'error')
       });

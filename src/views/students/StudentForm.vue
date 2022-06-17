@@ -1,17 +1,16 @@
 <template>
-<!--    <SimpleForm :onSubmit="submit" @done="$router.back()">-->
+  <!--    <SimpleForm :onSubmit="submit" @done="$router.back()">-->
   <r-form :onSubmit="submit" @done="$router.back()">
     <template #main>
       <p class="span-2 form__title">{{ isEdit ? 'Update Student' : 'Create New Student' }}</p>
 
       <image-upload
-          :isFormSubmitted="isFormSubmitted"
           :image_obj="old_image"
+          :isFormSubmitted="isFormSubmitted"
           @uploadedImage="getUploadedImage"
       />
 
       <v-text-field
-          readonly
           v-model="student.roll_no"
           :rules="[required('A roll_no must be provided')]"
           class="span-2 mt-4"
@@ -19,6 +18,7 @@
           label="Roll #"
           outlined
           persistent-hint
+          readonly
           type="number"
       />
 
@@ -83,7 +83,7 @@
     </template>
 
   </r-form>
-<!--    </SimpleForm>-->
+  <!--    </SimpleForm>-->
 </template>
 
 <script>
@@ -92,10 +92,10 @@ import RForm from '../../components/RForm';
 import {StudentsService} from '@/services/students-service';
 import {ClassesService} from "@/services/classes-service";
 import LoadingDialog from '../../components/LoadingDialog';
-import { required } from '@/utils/validators';
-import { deleteObject, getDownloadURL, ref, uploadBytes, getStorage } from "firebase/storage";
+import {required} from '@/utils/validators';
+import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import ImageUpload from "@/components/ImageUpload";
-import { showToast } from '@/assets/toast';
+import {showToast} from '@/assets/toast';
 
 export default {
   name: 'Form',
@@ -140,7 +140,7 @@ export default {
   methods: {
     required,
     showToast() {
-      showToast( 'success', 'Student created successfully!')
+      showToast('success', 'Student created successfully!')
     },
 
     getUploadedImage(_image_obj) {
@@ -228,29 +228,19 @@ export default {
 
     async uploadImageToFirebase(storage, _file, _id) {
       const storageRef = ref(storage, _id + '_' + _file.name);
+      try {
+        await uploadBytes(storageRef, _file)
+        this.student.image = await getDownloadURL(storageRef);
+      } catch (e) {
+        console.log(e, 'Error occurred while uploading image!')
+      }
 
-      await uploadBytes(storageRef, _file).then(async (snapshot) => {
-        console.log(snapshot, 'snapshot')
-
-        await getDownloadURL(storageRef)
-            .then((url) => {
-              console.log(url, 'url')
-              this.student.image = url;
-            })
-            .catch((error) => {
-              console.log(error, 'error')
-            });
-
-      }).catch(e => {
-        console.log(e)
-      });
     },
 
     async deleteImageFromFirebase(storage, file_url) {
       const desertRef = ref(storage, file_url);
-
       deleteObject(desertRef).then(() => {
-        // File deleted successfully
+        console.log('File deleted successfully')
       }).catch((error) => {
         console.log(error, 'error')
       });
