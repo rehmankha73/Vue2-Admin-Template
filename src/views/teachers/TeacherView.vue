@@ -163,12 +163,10 @@ export default {
     },
 
     addNew() {
-      console.log('AddNewItem')
       this.$router.push('/teacher');
     },
 
     edit(item) {
-      console.log(item)
       this.$router.push(`/teacher?id=${item.id}`);
     },
 

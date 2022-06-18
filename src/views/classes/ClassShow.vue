@@ -16,6 +16,7 @@
 </template>
 <script>
 import {ClassesService} from "@/services/classes-service";
+import {showToast} from "@/assets/toast";
 
 export default {
   data() {
@@ -31,7 +32,7 @@ export default {
         this.dataLoading = true
         this.class_data = await this.classes_service.fetchOne(this.$route.query.id);
       } catch (e) {
-        console.log(e)
+        showToast('error', e)
       }
       this.dataLoading = false
     }

@@ -232,7 +232,7 @@ export default {
         await uploadBytes(storageRef, _file)
         this.student.image = await getDownloadURL(storageRef);
       } catch (e) {
-        console.log(e, 'Error occurred while uploading image!')
+        showToast('error', e + 'Error occurred while uploading image!')
       }
 
     },
@@ -240,9 +240,8 @@ export default {
     async deleteImageFromFirebase(storage, file_url) {
       const desertRef = ref(storage, file_url);
       deleteObject(desertRef).then(() => {
-        console.log('File deleted successfully')
       }).catch((error) => {
-        console.log(error, 'error')
+        showToast('error', error)
       });
     },
 

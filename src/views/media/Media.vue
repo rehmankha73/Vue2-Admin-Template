@@ -8,11 +8,9 @@
         ></v-progress-circular>
       </v-overlay>
 
-      <v-card-title>
-
+      <div style="padding:20px 20px 10px 20px">
         <div class="d-flex flex-row justify-space-between">
           <h4>Multiple Media Picker with horizontal scrollbar</h4>
-
           <v-btn
               :disabled="loading"
               class="ml-4"
@@ -28,10 +26,17 @@
                 indeterminate
                 size="15"
             ></v-progress-circular>
-            Upload Files
+            {{ isEdit ? 'Update & upload files' : 'Upload Files' }}
           </v-btn>
         </div>
-      </v-card-title>
+
+        <span v-if="isEdit" class="">
+          <v-icon color="yellow">
+            mdi-alert
+          </v-icon>
+          Note: Please make sure to press update button to save changes!
+        </span>
+      </div>
 
       <RMediaPicker
           v-if="isEdit ? (!!old_files) : true "
@@ -71,20 +76,17 @@ export default {
   methods: {
     getFiles(_files) {
       this.files = _files
-      console.log(_files, 'from components')
     },
 
     getRemovedFiles(_files) {
       this.removed_files = _files
-      console.log(_files, 'removed file from comp')
     },
 
     async deleteImageFromFirebase(file_url) {
       try {
-        await deleteObject(ref(getStorage(), file_url));
-        console.log('File deleted successfully')
+        await deleteObject(ref(getStorage(), file_url))
       } catch (error) {
-        console.log(error, 'error')
+        showToast('error', error)
       }
     },
 
@@ -109,7 +111,6 @@ export default {
 
         if (this.removed_files.length > 0) {
           for (let i = 0; i < this.removed_files.length; i++) {
-            console.log(this.removed_files[i], 'r_file')
             await this.deleteImageFromFirebase(this.removed_files[i].url)
           }
         }
@@ -129,6 +130,7 @@ export default {
       this.loading = false
       showToast('success', this.uploaded_files.length + ' file(s) has been uploaded successfully!')
       this.uploaded_files = []
+      await this.$router.push('/media')
     },
 
     async getUploadedFilesData(_id,) {

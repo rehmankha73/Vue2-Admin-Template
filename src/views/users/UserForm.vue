@@ -80,6 +80,7 @@ import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "fireba
 import {createUserWithEmailAndPassword} from "firebase/auth";
 import {auth} from '@/firebase_config'
 import ImageUpload from "@/components/ImageUpload";
+import {showToast} from "@/assets/toast";
 
 export default {
   name: 'Form',
@@ -160,7 +161,6 @@ export default {
         this.isFormSubmitted = true;
         context.changeLoadingMessage('Creating A New User');
         try {
-          console.log(this.auth_user)
           // creating new user with email & password
           if (!this.auth_user) {
             try {
@@ -201,22 +201,12 @@ export default {
 
     async uploadImageToFirebase(storage, _file, _id) {
       const storageRef = ref(storage, _id + '_' + _file.name);
-
-      await uploadBytes(storageRef, _file).then(async (snapshot) => {
-        console.log(snapshot, 'snapshot')
-
-        await getDownloadURL(storageRef)
-            .then((url) => {
-              console.log(url, 'url')
-              this.user.image = url;
-            })
-            .catch((error) => {
-              console.log(error, 'error')
-            });
-
-      }).catch(e => {
-        console.log(e)
-      });
+      try {
+        await uploadBytes(storageRef, _file);
+        this.user.image = await getDownloadURL(storageRef);
+      } catch (e) {
+        showToast('error', e)
+      }
     },
 
     async deleteImageFromFirebase(storage, file_url) {
@@ -225,7 +215,7 @@ export default {
       deleteObject(desertRef).then(() => {
         // File deleted successfully
       }).catch((error) => {
-        console.log(error, 'error from deleteImage')
+        showToast('error', error + 'error from deleteImage')
       });
     },
   }

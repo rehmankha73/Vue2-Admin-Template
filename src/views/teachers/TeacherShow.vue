@@ -39,6 +39,7 @@
 <script>
 
 import {TeachersService} from "@/services/teachers-service";
+import {showToast} from "@/assets/toast";
 
 export default {
   data() {
@@ -54,7 +55,7 @@ export default {
         this.dataLoading = true
         this.teacher = await this.teachers_service.fetchOne(this.$route.query.id);
       } catch (e) {
-        console.log(e)
+        showToast('error', e)
       }
       this.dataLoading = false
 

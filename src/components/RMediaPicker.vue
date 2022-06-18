@@ -6,18 +6,19 @@
     >
       <section class="d-flex justify-space-between my-2 mx-2 pb-4 border-b">
         <v-btn
+            v-if="files.length > 0"
             color="primary"
             elevation="2"
             small
             @click="$refs.files.click()"
         >
-          Add Files
+          +
         </v-btn>
         <h3>Uploaded filed: {{ uploaded_files }}</h3>
         <input ref="files" class="d-none" multiple type="file" @change="onFileChange"/>
       </section>
 
-      <div v-if="files.length" class="mx-2 px-2 d-flex flex-row scroll"
+      <div v-if="files.length > 0" class="mx-2 px-2 d-flex flex-row scroll"
       >
         <span
             v-for="(file, key) in files"
@@ -43,8 +44,16 @@
           </v-btn>
         </span>
       </div>
-      <div v-else class="d-flex flex-row justify-center align-center">
-        <h1 style="margin-top: 10px; color: lightgray">Drags/Paste your files here</h1>
+      <div v-else class="d-flex flex-column justify-center align-center">
+        <h1 style="margin-top: 10px;margin-bottom: 10px; color: lightgray">Drags/Paste your files here</h1>
+        <v-btn
+            color="primary"
+            elevation="2"
+            small
+            @click="$refs.files.click()"
+        >
+          Add Files
+        </v-btn>
       </div>
     </div>
 
@@ -82,7 +91,11 @@ export default {
   },
   methods: {
     onFileChange(event) {
-      let _files = event.target.files || event.dataTransfer.files
+      event.stopPropagation();
+      event.preventDefault();
+      let _files =
+          event.target.files ||
+          event.dataTransfer.files
       this.uploaded_files = _files.length
       for (let i = 0; i < _files.length; i++) {
         const file = {

@@ -101,6 +101,7 @@ import {required} from '@/utils/validators';
 import {deleteObject, getDownloadURL, getStorage, ref, uploadBytes} from "firebase/storage";
 import {TeachersService} from "@/services/teachers-service";
 import ImageUpload from "@/components/ImageUpload";
+import {showToast} from "@/assets/toast";
 
 export default {
   name: 'Form',
@@ -230,16 +231,15 @@ export default {
         await uploadBytes(storageRef, _file)
         this.teacher.image = await getDownloadURL(storageRef);
       } catch (e) {
-        console.log(e, 'Error occurred while uploading image!')
+        showToast('error', e + 'Error occurred while uploading image!')
       }
     },
 
     async deleteImageFromFirebase(storage, file_url) {
       const desertRef = ref(storage, file_url);
       deleteObject(desertRef).then(() => {
-        console.log('File deleted successfully')
       }).catch((error) => {
-        console.log(error, 'error')
+        showToast('error', error)
       });
     },
 
