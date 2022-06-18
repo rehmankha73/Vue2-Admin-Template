@@ -27,10 +27,19 @@
             style="position: relative"
         >
           <img
+              v-if="file && !file.thumbnail_url"
               :alt="file.name"
               :src="file.url"
-              class="image-preview"
+              class="file-preview"
           />
+
+          <video
+              v-else
+              :poster="file.thumbnail_url"
+              :src="file.url"
+              class="file-preview"
+              controls
+          ></video>
 
           <v-btn
               class="icon"
@@ -71,7 +80,7 @@ export default {
     }
   },
   props: {
-  old_files: {
+    old_files: {
       type: Array,
       default: () => [],
     }
@@ -90,7 +99,7 @@ export default {
     }
   },
   methods: {
-    onFileChange(event) {
+    async onFileChange(event) {
       event.stopPropagation();
       event.preventDefault();
       let _files =
@@ -101,23 +110,72 @@ export default {
         const file = {
           file: _files[i],
           url: URL.createObjectURL(_files[i]),
+          type: _files[i].type,
           name: _files[i].name,
           size: _files[i].size,
         }
+
+        // if file is video then
+        if (file.type.includes("video")) {
+          try {
+
+            file.thumbnail = await this.generateThumbnail(_files[i]);
+            file.thumbnail_url = URL.createObjectURL(file.thumbnail);
+          } catch (e) {
+            console.log(e, 'error while creating thumbnail')
+          }
+        }
+
+        console.log(this.files, 'setting files')
+
         this.files.push(file)
       }
     },
 
+
+    async generateThumbnail(item) {
+      const binaryData = [];
+      binaryData.push(item);
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      const video = document.createElement("video");
+      let video_url = URL.createObjectURL(new Blob(binaryData))
+      video.setAttribute("src", video_url);
+      video.load();
+
+      let thumbnail = await new Promise((resolve) => {
+        video.onloadedmetadata = async () => {
+          console.log("in onload");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          video.currentTime = video.duration / 2;
+          await video.play();
+          context.drawImage(video, 0, 0);
+          video.pause();
+          const blob = await new Promise((resolve) => {
+            return canvas.toBlob(function (blob) {
+              resolve(blob);
+            });
+          });
+          resolve(blob);
+        };
+      });
+
+      console.log(thumbnail, "thumb");
+      return thumbnail;
+    },
+
     removeImage(index) {
-      if(this.old_files && this.old_files.length > 0) {
+      if (this.old_files && this.old_files.length > 0) {
         this.removed_files.push(this.files[index]);
       }
       this.files.splice(index, 1)
     }
   },
   mounted() {
-    if(this.old_files && this.old_files.length > 0) {
+    if (this.old_files && this.old_files.length > 0) {
       this.files = this.old_files
+      console.log(this.files, 'from old one')
     }
   }
 }
@@ -129,13 +187,15 @@ export default {
 }
 
 .picker {
+  padding-bottom: 10px;
   width: 100%;
-  height: 220px;
+  max-height: 320px;
   border: 1px solid lightgray
 }
 
 .icon {
-  position: absolute; right: -10px;
+  position: absolute;
+  right: -10px;
 }
 
 .border-b {
@@ -146,9 +206,9 @@ export default {
   overflow-x: scroll
 }
 
-.image-preview {
-  max-width: 200px;
-  height: 100px;
+.file-preview {
+  max-width: 250px;
+  height: 200px;
   object-fit: cover;
 }
 </style>

@@ -2,9 +2,9 @@
   <div>
     <r-data-table
         :can_add_new_item="true"
-        :can_filter="true"
-        :can_edit_item="true"
         :can_delete_item="true"
+        :can_edit_item="true"
+        :can_filter="true"
 
         :getDataFunction="loadData"
         :headers="headers"
@@ -13,18 +13,28 @@
         title="Media"
 
         @AddNewItem="addNew"
-        @editItem="edit"
         @deleteItem="deleteItem"
+        @editItem="edit"
     >
       <template #files="{ item }">
-        <v-avatar v-for="(image, key) in item.files" :key="key" style="margin-right: 10px; margin-top: 10px;margin-bottom: 10px">
-          <v-img
-              :alt="image.name"
-              :src="image.url"
-              max-height="150"
-              max-width="250"
-          ></v-img>
-        </v-avatar>
+        <div v-for="(file, key) in item.files" :key="key" style="display: flex; flex-direction: row">
+          <v-avatar v-if="file && !file.thumbnail_url" style="margin-right: 10px; margin-top: 10px;margin-bottom: 10px">
+            <v-img
+                :alt="file.name"
+                :src="file.url"
+                max-height="150"
+                max-width="250"
+            ></v-img>
+          </v-avatar>
+          <video
+              v-else
+              style="height: 150px; width: 150px"
+              :poster="file.thumbnail_url"
+              :src="file.url"
+              class="file-preview"
+              controls
+          ></video>
+        </div>
       </template>
 
     </r-data-table>
@@ -33,7 +43,7 @@
 
 <script>
 import dayjs from 'dayjs';
-import { MediaService } from "@/services/media-service";
+import {MediaService} from "@/services/media-service";
 import RDataTable from "@/components/RDataTable";
 
 export default {
@@ -51,7 +61,7 @@ export default {
         text: 'ID',
         value: 'id',
         sortable: true,
-        width: 100
+        width: 200
       },
       {
         text: 'Media Items',

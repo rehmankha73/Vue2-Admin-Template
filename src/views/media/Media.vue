@@ -76,6 +76,7 @@ export default {
   methods: {
     getFiles(_files) {
       this.files = _files
+      console.log(_files, 'file from comp')
     },
 
     getRemovedFiles(_files) {
@@ -136,31 +137,61 @@ export default {
     async getUploadedFilesData(_id,) {
       let _data = [];
       for (let i = 0; i < this.files.length; i++) {
-        const storage = getStorage();
-        const storageRef = ref(storage, _id + '_' + this.files[i].name);
-        let _url = this.files[i].url;
-        if (!_url.startsWith('https')) {
-          try {
-            await uploadBytes(storageRef, this.files[i].file);
-            this.files[i].url = await getDownloadURL(storageRef)
-            let obj = {
-              url: this.files[i].url,
-              name: this.files[i].name,
-            }
-            _data.push(obj)
-          } catch (e) {
-            showToast('error', e)
-          }
-        } else {
-          let obj = {
-            url: this.files[i].url,
-            name: this.files[i].name,
-          }
-          _data.push(obj)
-        }
+        let item = await this.uploadFile(_id,!this.files[i].thumbnail ? 'image' : 'video', this.files[i])
+        console.log(item, 'item')
+        _data.push(item)
+        console.log(i)
       }
+      console.log(_data, 'data')
       return _data
     },
+
+    async uploadFile(_id, fileType, file) {
+      let _url = file.url;
+      // if file is file
+    if(fileType === 'image')  {
+      // storing image and returning ul to store in database
+      if (!_url.startsWith('https')) {
+        try {
+          console.log('image upload')
+          const storageRef = ref(getStorage(), _id+'_'+file.name);
+          await uploadBytes(storageRef, file.file);
+          let stored_url = await getDownloadURL(storageRef)
+          console.log(stored_url, 'stored_url')
+          return { url: stored_url, name: file.name}
+        } catch (e) {
+          showToast('error', "while uploading image file")
+        }
+      }
+    }
+    else {
+      // storing image & thumbnail file and returning url, thumbnail_url to store in database
+      if (!_url.startsWith('https')) {
+        try {
+          // file uploading to storage
+          console.log(file, 'afda')
+          let urlStorageRef = ref(getStorage(), _id+'_'+file.name);
+          await uploadBytes(urlStorageRef , file.file);
+          let stored_url = await getDownloadURL(urlStorageRef)
+
+          // thumbnail uploading to storage
+          let thumbStorageRef = ref(getStorage(), _id+'_thumb_'+file.name);
+          await uploadBytes(thumbStorageRef , file.thumbnail);
+
+          // await uploadBytes(thumbStorageRef, file.thumbnail);
+          let stored_thumbnail_url = await getDownloadURL(thumbStorageRef)
+
+          console.log(file.thumbnail, 'thumb')
+          console.log(stored_thumbnail_url, 'get store thumb')
+          console.log(stored_url, 'stored url')
+
+          return { name: file.name,  url: stored_url, thumbnail_url: stored_thumbnail_url}
+        } catch (e) {
+          showToast('error', "while uploading video file")
+        }
+      }
+    }
+  },
 
     getRandomId() {
       return Math.random().toString(36).substr(2, 9);

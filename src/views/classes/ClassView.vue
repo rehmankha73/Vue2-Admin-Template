@@ -14,10 +14,6 @@
       {{ formatDate(item.createdAt) }}
     </template>
 
-
-    <!--    <template #scopes="{ item }">-->
-    <!--      {{ item.scopes.join(', ').substr(0, 80) + '...' }}-->
-    <!--    </template>-->
   </data-table>
 </template>
 
