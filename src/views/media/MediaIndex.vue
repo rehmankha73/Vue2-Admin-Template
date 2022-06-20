@@ -16,24 +16,24 @@
         @deleteItem="deleteItem"
         @editItem="edit"
     >
-      <template #files="{ item }">
-        <div v-for="(file, key) in item.files" :key="key" style="display: flex; flex-direction: row">
-          <v-avatar v-if="file && !file.thumbnail_url" style="margin-right: 10px; margin-top: 10px;margin-bottom: 10px">
-            <v-img
+      <template #files="{ item }" >
+        <div style="display: flex; flex-direction: row; justify-content: start; align-items: start; margin-top: 10px; margin-bottom: 10px">
+          <div v-for="(file, key) in item.files" :key="key" style="margin-right:10px; height: 150px; width:150px; ">
+            <img
+                style="margin-right: 10px; height: 150px; width: 150px"
+                v-if="file && !file.thumbnail_url"
                 :alt="file.name"
                 :src="file.url"
-                max-height="150"
-                max-width="250"
-            ></v-img>
-          </v-avatar>
-          <video
-              v-else
-              style="height: 150px; width: 150px"
-              :poster="file.thumbnail_url"
-              :src="file.url"
-              class="file-preview"
-              controls
-          ></video>
+            />
+            <video
+                v-else
+                style=" height:100%; width: 150px; object-fit: cover"
+                :poster="file.thumbnail_url"
+                :src="file.url"
+                class="file-preview"
+                controls
+            ></video>
+          </div>
         </div>
       </template>
 

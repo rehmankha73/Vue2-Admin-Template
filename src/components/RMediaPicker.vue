@@ -35,7 +35,6 @@
 
           <video
               v-else
-              :poster="file.thumbnail_url"
               :src="file.url"
               class="file-preview"
               controls
@@ -126,8 +125,6 @@ export default {
           }
         }
 
-        console.log(this.files, 'setting files')
-
         this.files.push(file)
       }
     },
@@ -145,7 +142,6 @@ export default {
 
       let thumbnail = await new Promise((resolve) => {
         video.onloadedmetadata = async () => {
-          console.log("in onload");
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
           video.currentTime = video.duration / 2;
@@ -161,7 +157,6 @@ export default {
         };
       });
 
-      console.log(thumbnail, "thumb");
       return thumbnail;
     },
 
@@ -175,7 +170,6 @@ export default {
   mounted() {
     if (this.old_files && this.old_files.length > 0) {
       this.files = this.old_files
-      console.log(this.files, 'from old one')
     }
   }
 }

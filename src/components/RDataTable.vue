@@ -262,9 +262,6 @@ export default {
     },
 
     deleteItem(item) {
-      console.log(item)
-      console.log(this.items.indexOf(item))
-      console.log(this.items,'items')
       if (confirm('Are you sure!')) {
         this.items.splice(this.items.indexOf(item), 1)
         this.$emit('deleteItem', item)

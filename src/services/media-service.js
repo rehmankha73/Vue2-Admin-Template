@@ -40,6 +40,9 @@ export class MediaService {
         if (media.files && media.files.length > 0) {
             for (let i = 0; i < media.files.length; i++) {
                 try {
+                    if(media.files[i].thumbnail_url){
+                    await deleteObject(ref(getStorage(), media.files[i].thumbnail_url))
+                    }
                     await deleteObject(ref(getStorage(), media.files[i].url))
                 } catch (error) {
                     console.log(error, 'error')
