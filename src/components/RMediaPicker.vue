@@ -1,44 +1,46 @@
 <template>
-  <section class="outer">
-    <div class="picker"
-         @drop="onFileChange"
-         @dragover.prevent
-    >
-      <section class="d-flex justify-space-between my-2 mx-2 pb-4 border-b">
-        <v-btn
-            v-if="files.length > 0"
-            color="primary"
-            elevation="2"
-            small
-            @click="$refs.files.click()"
-        >
-          +
-        </v-btn>
-        <h3>Uploaded filed: {{ uploaded_files }}</h3>
-        <input ref="files" class="d-none" multiple type="file" @change="onFileChange"/>
-      </section>
-
-      <div v-if="files.length > 0" class="mx-2 px-2 d-flex flex-row scroll"
+  <div>
+    <section class="outer">
+      <div class="picker"
+           @drop="onFileChange"
+           @dragover.prevent
       >
+        <section class="d-flex justify-space-between my-2 mx-2 pb-4 border-b">
+          <v-btn
+              v-if="files.length > 0"
+              color="primary"
+              elevation="2"
+              small
+              @click="$refs.files.click()"
+          >
+            +
+          </v-btn>
+          <h3>Uploaded filed: {{ uploaded_files }}</h3>
+          <input ref="files" class="d-none" multiple type="file" @change="onFileChange"/>
+        </section>
+
+        <div v-if="files.length > 0" class="mx-2 px-2 d-flex flex-row scroll"
+        >
         <span
             v-for="(file, key) in files"
             :key="key"
             class="mx-2 py-2"
             style="position: relative"
+            @click="showPreview(key)"
         >
           <img
-              v-if="file && !file.thumbnail_url"
               :alt="file.name"
-              :src="file.url"
-              class="file-preview"
+              :src="!file.thumbnail_url ? file.url : file.thumbnail_url"
+              class="cursor-pointer file-preview"
           />
 
-          <video
-              v-else
-              :src="file.url"
-              class="file-preview"
-              controls
-          ></video>
+          <v-icon
+              v-if="file.thumbnail_url"
+              large
+              style="position: absolute;top: 55px; right: 65px; color: white; font-size: 100px; cursor: pointer"
+          >
+            mdi-play
+          </v-icon>
 
           <v-btn
               class="icon"
@@ -51,21 +53,66 @@
             X
           </v-btn>
         </span>
+        </div>
+        <div v-else class="d-flex flex-column justify-center align-center">
+          <h1 style="margin-top: 10px;margin-bottom: 10px; color: lightgray">Drags/Paste your files here</h1>
+          <v-btn
+              color="primary"
+              elevation="2"
+              small
+              @click="$refs.files.click()"
+          >
+            Add Files
+          </v-btn>
+        </div>
       </div>
-      <div v-else class="d-flex flex-column justify-center align-center">
-        <h1 style="margin-top: 10px;margin-bottom: 10px; color: lightgray">Drags/Paste your files here</h1>
-        <v-btn
-            color="primary"
-            elevation="2"
-            small
-            @click="$refs.files.click()"
-        >
-          Add Files
-        </v-btn>
-      </div>
-    </div>
 
-  </section>
+    </section>
+
+    <v-dialog
+        v-model="dialog"
+        :overlay-opacity="0.8"
+        width="88%"
+        style="position: relative"
+    >
+      <v-card color="black" style="padding-top: 80px;padding-bottom: 80px; width: 100%">
+        <v-btn
+            class="icon"
+            color="red"
+            dark
+            fab
+            style="position: absolute; right: 15px; cursor: pointer; z-index: 1"
+            x-small
+            @click="closeModal()"
+        >
+          X
+        </v-btn>
+        <v-carousel v-model="selected_file" hide-delimiter-background hide-delimiters>
+          <v-carousel-item
+              v-for="(file, i) in files"
+              :key="i"
+              class="mx-auto"
+          >
+            <img
+                v-if="file && !file.thumbnail_url"
+                :alt="file.name"
+                :src="file.url"
+                style="height: 100%; width: 800px"
+            />
+
+            <video
+                v-else
+                :id="i"
+                :src="file.url"
+                controls
+                style="height: 100%; width: 100%"
+            ></video>
+
+          </v-carousel-item>
+        </v-carousel>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script>
@@ -73,6 +120,8 @@ export default {
   name: "RMediaPicker",
   data() {
     return {
+      dialog: false,
+      selected_file: 0,
       uploaded_files: 0,
       files: [],
       removed_files: [],
@@ -98,6 +147,17 @@ export default {
     }
   },
   methods: {
+    closeModal() {
+      if (this.files[this.selected_file].thumbnail_url) {
+        document.getElementById(this.selected_file).pause();
+      }
+      this.dialog = false
+    },
+    showPreview(key) {
+      console.log(key)
+      this.selected_file = key
+      this.dialog = true
+    },
     async onFileChange(event) {
       event.stopPropagation();
       event.preventDefault();
@@ -117,7 +177,6 @@ export default {
         // if file is video then
         if (file.type.includes("video")) {
           try {
-
             file.thumbnail = await this.generateThumbnail(_files[i]);
             file.thumbnail_url = URL.createObjectURL(file.thumbnail);
           } catch (e) {
@@ -204,5 +263,9 @@ export default {
   max-width: 250px;
   height: 200px;
   object-fit: cover;
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 </style>

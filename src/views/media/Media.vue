@@ -44,6 +44,7 @@
           @removedFiles="getRemovedFiles"
           @uploadedFiles="getFiles"
       />
+
     </v-card>
   </div>
 </template>
