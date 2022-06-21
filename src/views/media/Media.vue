@@ -39,6 +39,8 @@
       </div>
 
       <RMediaPicker
+          :hasError="hasError"
+          :formErrors="formErrors"
           v-if="isEdit ? (!!old_files) : true "
           :old_files="old_files"
           @removedFiles="getRemovedFiles"
@@ -65,6 +67,8 @@ export default {
       files: [],
       removed_files: [],
       uploaded_files: [],
+      hasError: false,
+      formErrors: null,
       stored_files: null,
       old_files: null,
       isEdit: false,
@@ -117,21 +121,29 @@ export default {
         // })
         console.log(this.files, 'files')
 
-        // logic for updating
-        let _id = this.$route.query.id
-        this.uploaded_files = await this.getUploadedFilesData(_id, this.files);
+        if (this.files.length > 0) {
+          // logic for updating
+          let _id = this.$route.query.id
+          this.uploaded_files = await this.getUploadedFilesData(_id, this.files);
 
-        let _payload = {files: this.uploaded_files}
-        await this.media_service.update(_payload, _id);
+          let _payload = {files: this.uploaded_files}
+          await this.media_service.update(_payload, _id);
 
-        // logic for deleting
-        if (this.removed_files.length > 0) {
-          for (let i = 0; i < this.removed_files.length; i++) {
-            if(this.removed_files[i].thumbnail_url) {
-              await this.deleteImageFromFirebase(this.removed_files[i].thumbnail_url)
+          // logic for deleting
+          if (this.removed_files.length > 0) {
+            for (let i = 0; i < this.removed_files.length; i++) {
+              if (this.removed_files[i].thumbnail_url) {
+                await this.deleteImageFromFirebase(this.removed_files[i].thumbnail_url)
+              }
+              await this.deleteImageFromFirebase(this.removed_files[i].url)
             }
-            await this.deleteImageFromFirebase(this.removed_files[i].url)
           }
+        } else {
+          this.hasError = true
+          this.formErrors = 'File is required, please select at least 1!'
+          showToast('error', 'Please add at least one file to upload!')
+          this.loading = false;
+          return;
         }
 
       } else {
@@ -141,8 +153,11 @@ export default {
           let _payload = {files: this.uploaded_files}
           await this.media_service.create(_payload, _id);
         } else {
-          showToast('error', 'Please add at least one file to upload!'
-          )
+          this.hasError = true
+          this.formErrors = 'File is required!'
+          showToast('error', 'Please add at least one file to upload!')
+          this.loading = false;
+          return;
         }
       }
 

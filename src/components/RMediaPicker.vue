@@ -1,11 +1,14 @@
 <template>
   <div>
     <section class="outer">
-      <div class="picker"
+      <div :class="[hasError ? 'invalid' : '']"
+           class="picker"
            @drop="onFileChange"
            @dragover.prevent
       >
-        <section class="d-flex justify-space-between my-2 mx-2 pb-4 border-b">
+        <section
+            class="d-flex justify-space-between my-2 mx-2 pb-4 border-b"
+        >
           <v-btn
               v-if="files.length > 0"
               color="primary"
@@ -26,7 +29,6 @@
             :key="key"
             class="mx-2 py-2"
             style="position: relative"
-            @click="showPreview(key)"
         >
           <img
               :alt="file.name"
@@ -38,6 +40,7 @@
               v-if="file.thumbnail_url"
               large
               style="position: absolute;top: 55px; right: 65px; color: white; font-size: 100px; cursor: pointer"
+              @click="showPreview(key)"
           >
             mdi-play
           </v-icon>
@@ -66,14 +69,14 @@
           </v-btn>
         </div>
       </div>
-
+      <span v-if="hasError" style="color: red"> {{ formErrors }}</span>
     </section>
 
     <v-dialog
         v-model="dialog"
         :overlay-opacity="0.8"
-        width="88%"
         style="position: relative"
+        width="88%"
     >
       <v-card color="black" style="padding-top: 80px;padding-bottom: 80px; width: 100%">
         <v-btn
@@ -120,6 +123,7 @@ export default {
   name: "RMediaPicker",
   data() {
     return {
+      error: {},
       dialog: false,
       selected_file: 0,
       uploaded_files: 0,
@@ -128,6 +132,14 @@ export default {
     }
   },
   props: {
+    hasError: {
+      type: Boolean,
+      default: false,
+    },
+    formErrors: {
+      type: String,
+      default: null
+    },
     old_files: {
       type: Array,
       default: () => [],
@@ -188,7 +200,6 @@ export default {
       }
     },
 
-
     async generateThumbnail(item) {
       const binaryData = [];
       binaryData.push(item);
@@ -226,6 +237,7 @@ export default {
       this.files.splice(index, 1)
     }
   },
+
   mounted() {
     if (this.old_files && this.old_files.length > 0) {
       this.files = this.old_files
@@ -267,5 +279,9 @@ export default {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.invalid {
+  border: 1px solid red
 }
 </style>
