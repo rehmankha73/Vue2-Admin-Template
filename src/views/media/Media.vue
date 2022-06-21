@@ -17,7 +17,7 @@
               color="primary"
               elevation="2"
               small
-              @click="uploadFiles"
+              @click="submitFiles"
           >
             <v-progress-circular
                 v-if="loading"
@@ -39,9 +39,9 @@
       </div>
 
       <RMediaPicker
-          :hasError="hasError"
-          :formErrors="formErrors"
           v-if="isEdit ? (!!old_files) : true "
+          :formErrors="formErrors"
+          :hasError="hasError"
           :old_files="old_files"
           @removedFiles="getRemovedFiles"
           @uploadedFiles="getFiles"
@@ -88,14 +88,6 @@ export default {
       this.removed_files = _files
     },
 
-    async deleteImageFromFirebase(file_url) {
-      try {
-        await deleteObject(ref(getStorage(), file_url))
-      } catch (error) {
-        showToast('error', error)
-      }
-    },
-
     async loadData() {
       if (!this.$route.query.id) return;
       this.isEdit = true;
@@ -110,24 +102,15 @@ export default {
       this.loading = false;
     },
 
-    async uploadFiles() {
+    async submitFiles() {
       this.loading = true
+      if (this.files.length > 0) {
 
-      if (this.isEdit) {
-        // let new_files = this.files.filter(f => {
-        //   if(!f.is_uploaded) {
-        //     return f
-        //   }
-        // })
-        console.log(this.files, 'files')
-
-        if (this.files.length > 0) {
+        if (this.isEdit) {
           // logic for updating
-          let _id = this.$route.query.id
-          this.uploaded_files = await this.getUploadedFilesData(_id, this.files);
-
+          this.uploaded_files = await this.getUploadedFilesData(this.files);
           let _payload = {files: this.uploaded_files}
-          await this.media_service.update(_payload, _id);
+          await this.media_service.update(_payload, this.$route.query.id);
 
           // logic for deleting
           if (this.removed_files.length > 0) {
@@ -138,88 +121,94 @@ export default {
               await this.deleteImageFromFirebase(this.removed_files[i].url)
             }
           }
+
+          showToast('success', 'File(s) has been updated successfully!')
         } else {
-          this.hasError = true
-          this.formErrors = 'File is required, please select at least 1!'
-          showToast('error', 'Please add at least one file to upload!')
-          this.loading = false;
-          return;
+          this.uploaded_files = await this.getUploadedFilesData(this.files);
+          let _payload = {files: this.uploaded_files}
+          await this.media_service.create(_payload, this.getRandomId());
+          showToast('success', this.uploaded_files.length + ' file(s) has been uploaded/updated successfully!')
         }
+
+        this.loading = false
+        this.uploaded_files = []
+        await this.$router.push('/media')
 
       } else {
-        if (this.files.length > 0) {
-          let _id = this.getRandomId();
-          this.uploaded_files = await this.getUploadedFilesData(_id, this.files);
-          let _payload = {files: this.uploaded_files}
-          await this.media_service.create(_payload, _id);
-        } else {
-          this.hasError = true
-          this.formErrors = 'File is required!'
-          showToast('error', 'Please add at least one file to upload!')
-          this.loading = false;
-          return;
-        }
+        this.hasError = true
+        this.formErrors = 'Please add at least one file to upload!'
+        showToast('error', 'Please add at least one file to upload!')
+        this.loading = false;
       }
 
-      this.loading = false
-      showToast('success', this.uploaded_files.length + ' file(s) has been uploaded/updated successfully!')
-      this.uploaded_files = []
-      await this.$router.push('/media')
     },
 
-    async getUploadedFilesData(_id, files) {
+    async getUploadedFilesData(files) {
       let _data = [];
       for (let i = 0; i < files.length; i++) {
-        let item = await this.uploadFile(_id, !files[i].thumbnail_url ? 'image' : 'video', files[i])
+        let item = await this.uploadFile(!files[i].thumbnail_url ? 'image' : 'video', files[i])
         _data.push(item)
       }
       return _data
     },
 
-    async uploadFile(_id, fileType, file) {
-      if(!file.is_uploaded) {
-        if (fileType === 'image') {
-        // storing image and returning ul to store in database
-        try {
-          const storageRef = ref(getStorage(), _id + '_' + file.name);
-          await uploadBytes(storageRef, file.file);
-          let stored_url = await getDownloadURL(storageRef)
-          return {url: stored_url, name: file.name}
-        } catch (e) {
-          showToast('error', "while uploading image file")
+    async uploadFile(fileType, file) {
+      if (fileType === 'image') {
+        if (!file.is_uploaded) {
+          // storing image and returning stored_url to store it in database
+          try {
+            const storageRef = ref(getStorage(), file.name + '_' + this.getCurrentDataTime());
+            await uploadBytes(storageRef, file.file);
+            let stored_url = await getDownloadURL(storageRef)
+            return {url: stored_url, name: file.name}
+          } catch (e) {
+            showToast('error', "Error while uploading image!")
+          }
         }
+        return {url: file.url, name: file.name}
+
+
       } else {
-        // storing image & thumbnail file and returning url, thumbnail_url to store in database
-        try {
-          // file uploading to storage
-          let urlStorageRef = ref(getStorage(), _id + '_' + file.name);
-          await uploadBytes(urlStorageRef, file.file);
-          let stored_url = await getDownloadURL(urlStorageRef)
+        if (!file.is_uploaded) {
+          // storing video & thumbnail file and returning url, thumbnail_url to store in database
+          try {
+            // video uploading to storage
+            let urlStorageRef = ref(getStorage(), file.name + '_' + this.getCurrentDataTime());
+            await uploadBytes(urlStorageRef, file.file);
+            let stored_url = await getDownloadURL(urlStorageRef)
 
-          // thumbnail uploading to storage
-          let thumbStorageRef = ref(getStorage(), _id + '_thumb_' + file.name);
-          await uploadBytes(thumbStorageRef, file.thumbnail);
+            // thumbnail uploading to storage
+            let thumbStorageRef = ref(getStorage(), file.name + '_' + this.getCurrentDataTime());
+            await uploadBytes(thumbStorageRef, file.thumbnail);
+            let stored_thumbnail_url = await getDownloadURL(thumbStorageRef)
 
-          // await uploadBytes(thumbStorageRef, file.thumbnail);
-          let stored_thumbnail_url = await getDownloadURL(thumbStorageRef)
-
-          return {name: file.name, url: stored_url, thumbnail_url: stored_thumbnail_url}
-        } catch (e) {
-          showToast('error', "while uploading video file")
-        }
-      }
-      } else {
-        if(fileType === 'image') {
-          return {url: file.url, name: file.name}
+            return {name: file.name, url: stored_url, thumbnail_url: stored_thumbnail_url}
+          } catch (e) {
+            showToast('error', "Error while uploading video!")
+          }
         }
         return {name: file.name, url: file.url, thumbnail_url: file.thumbnail_url}
-
       }
     },
 
+    async deleteImageFromFirebase(file_url) {
+      try {
+        await deleteObject(ref(getStorage(), file_url))
+      } catch (error) {
+        showToast('error', error)
+      }
+    }
+    ,
+
+    getCurrentDataTime() {
+      let today = new Date();
+      return today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds() + '_' + today.getDate() + '_' + (today.getMonth() + 1) + '_' + today.getFullYear();
+    }
+    ,
     getRandomId() {
       return Math.random().toString(36).substr(2, 9);
     }
+    ,
   }
 }
 </script>
