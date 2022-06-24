@@ -3,6 +3,7 @@ import App from './App.vue';
 import vuetify from './plugins/vuetify';
 import router from './router';
 import axios from "axios";
+
 Vue.config.productionTip = false;
 import './assets/style.sass';
 import './assets/toast.css';
