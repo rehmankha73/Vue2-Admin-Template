@@ -2,6 +2,11 @@
   <!--  :allow-add="getUser() ? getUser().scopes.includes('users:new') : false"-->
   <!--  :delete-handler="getUser() ? getUser().scopes.includes('users:delete') ?  students_service.delete : null : null"-->
   <!--  :edit-handler="getUser() ? getUser().scopes.includes('users:edit') ? edit : null : null"-->
+  <div>
+  <v-btn class="mt-10" @click="notifyMe">
+    Click me to notify
+  </v-btn>
+
   <data-table
       :allow-add="true"
       :delete-handler="deleteService"
@@ -29,6 +34,7 @@
     </template>
 
   </data-table>
+  </div>
 </template>
 
 <script>
@@ -91,6 +97,22 @@ export default {
   }),
 
   methods: {
+    notifyMe() {
+      if (Notification.permission !== "granted")
+        Notification.requestPermission();
+      else {
+
+        var notification = new Notification('This is a test notifications',
+            { body: 'Test', renotify: true, requireInteraction: true, icon: '../assets/logo.png', badge: '../assets/logo.png'},
+        )
+
+        notification.onclick = function (event) {
+          event.preventDefault();
+          window.open('http://localhost:8080', '_blank')
+        }
+
+      }
+    },
     getUser,
     formatDate(date) {
       return dayjs(date).format('D MMM YYYY - hh:mm a');

@@ -1,12 +1,17 @@
 <template>
   <div>
     <div class="dashboard-cards">
-      <stat-card title="Card 1" value="Notification" color="secondary" :loading="gamesLoading" filter/>
-      <stat-card title="Card 2" value="User" color="purple"
-                 :loading="loading"/>
-      <stat-card title="Card 3" value="Recently Logged in User" color="green" :loading="loading"/>
-      <stat-card title="Card 4" value="New Notification" color="pink" :loading="loading"/>
+      <stat-card :loading="gamesLoading" color="secondary" filter title="Card 1" value="Notification"/>
+      <stat-card :loading="loading" color="purple" title="Card 2"
+                 value="User"/>
+      <stat-card :loading="loading" color="green" title="Card 3" value="Recently Logged in User"/>
+      <stat-card :loading="loading" color="pink" title="Card 4" value="New Notification"/>
     </div>
+
+    <v-btn class="mt-10" @click="notifyMe">
+      Click me to notify
+    </v-btn>
+
   </div>
 </template>
 
@@ -25,6 +30,25 @@ export default {
     dashboardCards: {},
     service: new DashboardService(),
   }),
+  methods: {
+    notifyMe() {
+      if (Notification.permission !== "granted")
+        Notification.requestPermission();
+      else {
+        let notification = new Notification('This is a test notifications',
+            { body: 'Test', icon: '../assets/logo.png', badge: '../assets/logo.png'},
+        );
+        notification.onclick = function (event) {
+          if(window.location.href === 'http://localhost:8080/') {
+            event.preventDefault()
+            return;
+          }
+          event.preventDefault();
+          window.open('http://localhost:8080', '_blank')
+        }
+      }
+    }
+  }
 };
 </script>
 
