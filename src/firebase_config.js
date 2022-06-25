@@ -47,7 +47,7 @@ onMessage(messaging, (payload) => {
         console.log('Message received. ', payload);
 
         let notification = new Notification(payload.notification.title,
-            {body: payload.notification.body,},
+            {body: payload.notification.body},
         );
 
         notification.onclick = function (event) {
@@ -58,6 +58,7 @@ onMessage(messaging, (payload) => {
             }
             event.preventDefault();
             window.open('http://localhost:8080', '_blank')
+            notification.close();
         }
     }
 });
