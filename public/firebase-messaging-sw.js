@@ -1,39 +1,34 @@
-import { initializeApp } from "firebase/app";
-import { getMessaging, onMessage } from "firebase/messaging";
-import { onBackgroundMessage } from "firebase/messaging/sw";
+// eslint-disable-next-line no-undef
+importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js');
+// eslint-disable-next-line no-undef
+importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js');
 
-// Initialize the Firebase app in the service worker by passing in
-// your app's Firebase config object.
-const firebaseApp = initializeApp({
-    apiKey: "AIzaSyCNWRLBvGd8uhVKUG1SdoXKxWE_BQhPufQ",
-    authDomain: "fir-api-a34d5.firebaseapp.com",
-    databaseURL: "https://fir-api-a34d5-default-rtdb.firebaseio.com",
-    projectId: "fir-api-a34d5",
-    storageBucket: "fir-api-a34d5.appspot.com",
-    messagingSenderId: "822572907739",
-    appId: "1:822572907739:web:32829707b5d46fad4560fe"
+firebase.initializeApp({
+    apiKey: 'api-key',
+    authDomain: 'project-id.firebaseapp.com',
+    databaseURL: 'https://project-id.firebaseio.com',
+    projectId: 'project-id',
+    storageBucket: 'project-id.appspot.com',
+    messagingSenderId: 'sender-id',
+    appId: 'app-id',
+    measurementId: 'G-measurement-id',
 });
 
-// Retrieve an instance of Firebase Messaging so that it can handle background
-// messages.
-const messaging = getMessaging(firebaseApp);
-console.log(messaging, 'message')
+console.log(firebase)
 
-onMessage(messaging, (payload) => {
-    console.log('Message received. ', payload);
-});
+const messaging = firebase.messaging();
+console.log(messaging, 'messaging')
 
-onBackgroundMessage(messaging, (payload) => {
-    // console.log('[firebase-messaging-sw.js] Received background message ', payload);
-    console.log(payload, 'payload')
+messaging.onBackgroundMessage((payload) => {
+    console.log('[firebase-messaging-sw.js] Received background message ', payload);
     // Customize notification here
-    const notificationTitle = 'Background Message Title';
-    const notificationOptions = {
-        body: 'Background Message body.',
-        icon: '/firebase-logo.png'
-    };
+    // const notificationTitle = 'Background Message Title';
+    // const notificationOptions = {
+    //     body: 'Background Message body.',
+    //     icon: '/firebase-logo.png'
+    // };
 
-    self.registration.showNotification(notificationTitle, notificationOptions).then(r => console.log(r, 'after showing notifications!'));
+    // self.registration.showNotification(notificationTitle, notificationOptions).then(r => console.log(r, 'response'));
 });
 
 export default messaging;

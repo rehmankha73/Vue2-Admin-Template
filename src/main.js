@@ -55,6 +55,7 @@ axios.interceptors.response.use(
     }
 );
 
+
 Vue.use(Toast, options);
 
 new Vue({
