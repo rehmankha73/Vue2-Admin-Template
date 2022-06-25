@@ -2,8 +2,7 @@ import "firebase/firestore";
 import {initializeApp} from 'firebase/app';
 import {getFirestore} from "firebase/firestore/lite";
 import {getAuth} from "firebase/auth";
-import {getMessaging, getToken} from "firebase/messaging";
-
+import {getMessaging, getToken, onMessage } from "firebase/messaging";
 
 export const firebaseConfig = {
     apiKey: "AIzaSyCNWRLBvGd8uhVKUG1SdoXKxWE_BQhPufQ",
@@ -41,6 +40,26 @@ getToken(messaging, {vapidKey: 'BEODX0vXv-bAG0J9aMNuvig0tZsFowJhTRUdzHFgX9I0zDFG
     console.log('An error occurred while retrieving token. ', err);
 });
 
+onMessage(messaging, (payload) => {
+    if (Notification.permission !== "granted")
+        Notification.requestPermission();
+    else {
+        console.log('Message received. ', payload);
 
+        let notification = new Notification(payload.notification.title,
+            {body: payload.notification.body,},
+        );
 
-export { db, auth, messaging }
+        notification.onclick = function (event) {
+            // have to specify base url for
+            if (window.location.href === 'http://localhost:8080/') {
+                event.preventDefault()
+                return;
+            }
+            event.preventDefault();
+            window.open('http://localhost:8080', '_blank')
+        }
+    }
+});
+
+export {db, auth, messaging}

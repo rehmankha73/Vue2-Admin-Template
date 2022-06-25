@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-app-bar app dark color="primary" elevate-on-scroll>
+    <v-app-bar app color="primary" dark elevate-on-scroll>
       <v-app-bar-nav-icon @click="drawer = !drawer"/>
 
       <v-card-title>School Management System!</v-card-title>
@@ -14,18 +14,18 @@
       </v-container>
     </v-main>
     <v-navigation-drawer v-model="drawer" app>
-      <img src="../assets/logo.png" alt="logo" class="logo" height="70"/>
+      <img alt="logo" class="logo" height="70" src="../assets/logo.png"/>
       <v-divider/>
       <template v-for="(route, key) in routes">
         <v-list-item
             v-if="route.isVisible"
             :key="key"
+            :to="route.to"
+            active-class="route--active"
             class="route"
             color="#da57a7"
-            active-class="route--active"
-            exact
             dense
-            :to="route.to"
+            exact
         >
           <v-list-item-icon>
             <v-icon v-text="route.icon"/>
