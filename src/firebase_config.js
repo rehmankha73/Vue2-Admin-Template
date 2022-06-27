@@ -52,12 +52,15 @@ onMessage(messaging, (payload) => {
 
         notification.onclick = function (event) {
             // have to specify base url for
-            if (window.location.href === 'http://localhost:8080/') {
-                event.preventDefault()
-                return;
-            }
+            // only for redirecting same url of app
+            // if (window.location.href === 'http://localhost:8080/') {
+            //     event.preventDefault()
+            //     return;
+            // }
+
             event.preventDefault();
-            window.open('http://localhost:8080', '_blank')
+            console.log(payload.fcmOptions.link, 'click action')
+            window.open(payload.fcmOptions.link, '_blank')
             notification.close();
         }
     }
